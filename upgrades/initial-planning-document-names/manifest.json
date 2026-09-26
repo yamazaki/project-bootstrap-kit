@@ -1,0 +1,22 @@
+{
+  "name": "initial-planning-document-names",
+  "description": "Rename initial planning documents without the _template suffix and consolidate WBS planning into docs/PLAN_PHASE_CURRENT.md.",
+  "mode": "semi-automatic",
+  "adds": [],
+  "patchTargets": [
+    "docs/WORK/0.1/*_template.md",
+    "AGENTS.md",
+    "docs/DEVELOPMENT_GUIDELINE.md",
+    "docs/DOCUMENTATION.md",
+    "docs/WORK/0.1/README.md",
+    ".agents/skills/project-bootstrap/SKILL.md or .claude/skills/project-bootstrap/SKILL.md",
+    "docs/BOOTSTRAP_ADOPTION.md"
+  ],
+  "notes": [
+    "Documents are renamed only when the destination is absent or has equivalent content.",
+    "Conflicting source and destination documents are preserved and reported as WARN.",
+    "An untouched wbs_breakdown_template.md is removed; edited WBS drafts are preserved and reported as WARN.",
+    "WBS planning is consolidated into docs/PLAN_PHASE_CURRENT.md.",
+    "The project-bootstrap skill records non-functional findings in docs/WORK/0.1/product_definition.md."
+  ]
+}

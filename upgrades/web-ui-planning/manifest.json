@@ -1,0 +1,14 @@
+{
+  "name": "web-ui-planning",
+  "description": "Add Web GUI design mock and FQDN planning checks to WBS and initial planning documents.",
+  "adds": [],
+  "patchTargets": [
+    "AGENTS.md",
+    "docs/DEVELOPMENT_GUIDELINE.md",
+    "docs/DOCUMENTATION.md",
+    "docs/WORK/0.1/interaction_design.md",
+    "docs/WORK/0.1/implementation_ready_checklist.md",
+    ".agents/skills/project-bootstrap/ or .claude/skills/project-bootstrap/",
+    "docs/BOOTSTRAP_ADOPTION.md"
+  ]
+}

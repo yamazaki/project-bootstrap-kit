@@ -1,0 +1,18 @@
+{
+  "name": "task-completion-gate",
+  "description": "Set WBS tasks to in-progress at start, and require user review, acceptance verification, and final review before marking them complete.",
+  "mode": "semi-automatic",
+  "adds": [],
+  "patchTargets": [
+    "AGENTS.md",
+    "docs/DEVELOPMENT_GUIDELINE.md",
+    "docs/PLAN_PHASE_CURRENT.md",
+    "docs/DOCUMENTATION.md",
+    "docs/BOOTSTRAP_ADOPTION.md"
+  ],
+  "notes": [
+    "Use this when AI agents do not mark WBS tasks as [>] at task start, or mark tasks as [x] immediately after implementation work.",
+    "This feature keeps in-review or acceptance-pending tasks as [>].",
+    "E2E / device verification Runbook preparation is treated as part of implementation task work when applicable."
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "name": "claude-project-instructions",
+  "description": "Add the Claude Code project instruction entrypoint that imports AGENTS.md.",
+  "mode": "semi-automatic",
+  "adds": [
+    "CLAUDE.md"
+  ],
+  "patchTargets": [
+    "docs/BOOTSTRAP_ADOPTION.md"
+  ],
+  "notes": [
+    "Requires --ai-surface claude or both.",
+    "CLAUDE.md imports AGENTS.md and does not duplicate the project rules.",
+    "Known legacy content is updated; unknown customized content is preserved as SKIP(KEEP).",
+    "This feature does not modify ~/.claude/CLAUDE.md or ~/.claude/rules/*.md."
+  ]
+}

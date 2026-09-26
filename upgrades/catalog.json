@@ -1,0 +1,238 @@
+{
+  "schemaVersion": 1,
+  "features": [
+    {
+      "name": "skills-surface-migration",
+      "contractVersion": 1,
+      "introducedIn": "0.1.0",
+      "updatedIn": "0.1.0",
+      "dependsOn": [],
+      "selection": "recommended",
+      "supportedProjectModels": [
+        "development"
+      ]
+    },
+    {
+      "name": "skills-sync",
+      "contractVersion": 1,
+      "introducedIn": "0.1.0",
+      "updatedIn": "0.9.0",
+      "dependsOn": [
+        "skills-surface-migration"
+      ],
+      "selection": "recommended",
+      "supportedProjectModels": [
+        "development"
+      ]
+    },
+    {
+      "name": "interaction-design",
+      "contractVersion": 1,
+      "introducedIn": "0.1.0",
+      "updatedIn": "0.6.0",
+      "dependsOn": [],
+      "selection": "recommended",
+      "supportedProjectModels": [
+        "development"
+      ]
+    },
+    {
+      "name": "session-operation-policy",
+      "contractVersion": 1,
+      "introducedIn": "0.1.0",
+      "updatedIn": "0.6.0",
+      "dependsOn": [],
+      "selection": "recommended",
+      "supportedProjectModels": [
+        "development"
+      ]
+    },
+    {
+      "name": "phase-transition",
+      "contractVersion": 1,
+      "introducedIn": "0.1.0",
+      "updatedIn": "0.5.0",
+      "dependsOn": [],
+      "selection": "recommended",
+      "supportedProjectModels": [
+        "development"
+      ]
+    },
+    {
+      "name": "phase-session-archive-governance",
+      "contractVersion": 1,
+      "introducedIn": "0.9.0",
+      "updatedIn": "0.9.0",
+      "dependsOn": [
+        "phase-transition"
+      ],
+      "selection": "recommended",
+      "supportedProjectModels": [
+        "development"
+      ]
+    },
+    {
+      "name": "capture-inbox",
+      "contractVersion": 1,
+      "introducedIn": "0.1.0",
+      "updatedIn": "0.2.0",
+      "dependsOn": [],
+      "selection": "recommended",
+      "supportedProjectModels": [
+        "development"
+      ]
+    },
+    {
+      "name": "project-bootstrap-planning",
+      "contractVersion": 1,
+      "introducedIn": "0.2.0",
+      "updatedIn": "0.4.0",
+      "dependsOn": [
+        "interaction-design"
+      ],
+      "selection": "recommended",
+      "supportedProjectModels": [
+        "development"
+      ]
+    },
+    {
+      "name": "initial-planning-document-names",
+      "contractVersion": 1,
+      "introducedIn": "0.2.0",
+      "updatedIn": "0.2.0",
+      "dependsOn": [
+        "project-bootstrap-planning"
+      ],
+      "selection": "recommended",
+      "supportedProjectModels": [
+        "development"
+      ]
+    },
+    {
+      "name": "web-ui-planning",
+      "contractVersion": 1,
+      "introducedIn": "0.2.0",
+      "updatedIn": "0.6.0",
+      "dependsOn": [
+        "interaction-design",
+        "project-bootstrap-planning"
+      ],
+      "selection": "recommended",
+      "supportedProjectModels": [
+        "development"
+      ]
+    },
+    {
+      "name": "claude-project-instructions",
+      "contractVersion": 1,
+      "introducedIn": "0.2.0",
+      "updatedIn": "0.2.0",
+      "dependsOn": [],
+      "selection": "recommended",
+      "aiSurfaces": [
+        "claude",
+        "both"
+      ],
+      "supportedProjectModels": [
+        "development"
+      ]
+    },
+    {
+      "name": "technology-profiles",
+      "contractVersion": 1,
+      "introducedIn": "0.4.0",
+      "updatedIn": "0.5.0",
+      "dependsOn": [
+        "phase-transition",
+        "project-bootstrap-planning"
+      ],
+      "selection": "recommended",
+      "supportedProjectModels": [
+        "development"
+      ]
+    },
+    {
+      "name": "git-commit-guidance",
+      "contractVersion": 1,
+      "introducedIn": "0.5.0",
+      "updatedIn": "0.5.0",
+      "dependsOn": [],
+      "selection": "recommended",
+      "supportedProjectModels": [
+        "development"
+      ]
+    },
+    {
+      "name": "versioning",
+      "contractVersion": 1,
+      "introducedIn": "0.1.0",
+      "updatedIn": "0.6.0",
+      "dependsOn": [],
+      "selection": "recommended",
+      "supportedProjectModels": [
+        "development"
+      ]
+    },
+    {
+      "name": "coding-guideline",
+      "contractVersion": 1,
+      "introducedIn": "0.1.0",
+      "updatedIn": "0.6.0",
+      "dependsOn": [],
+      "selection": "recommended",
+      "supportedProjectModels": [
+        "development"
+      ]
+    },
+    {
+      "name": "e2e-runbook",
+      "contractVersion": 1,
+      "introducedIn": "0.1.0",
+      "updatedIn": "0.2.0",
+      "dependsOn": [
+        "coding-guideline"
+      ],
+      "selection": "recommended",
+      "supportedProjectModels": [
+        "development"
+      ]
+    },
+    {
+      "name": "task-completion-gate",
+      "contractVersion": 1,
+      "introducedIn": "0.1.0",
+      "updatedIn": "0.6.0",
+      "dependsOn": [
+        "e2e-runbook"
+      ],
+      "selection": "recommended",
+      "supportedProjectModels": [
+        "development"
+      ]
+    },
+    {
+      "name": "work-line-routing",
+      "contractVersion": 1,
+      "introducedIn": "0.5.0",
+      "updatedIn": "0.5.0",
+      "dependsOn": [],
+      "selection": "recommended",
+      "supportedProjectModels": [
+        "development"
+      ]
+    },
+    {
+      "name": "cleanup-migration-backup",
+      "contractVersion": 1,
+      "introducedIn": "0.1.0",
+      "updatedIn": "0.1.0",
+      "dependsOn": [
+        "skills-sync"
+      ],
+      "selection": "manual",
+      "supportedProjectModels": [
+        "development"
+      ]
+    }
+  ]
+}

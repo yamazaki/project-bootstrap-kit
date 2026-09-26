@@ -1,0 +1,23 @@
+{
+  "id": "cloudflare-workers",
+  "name": "Cloudflare Workers",
+  "version": "1.0.0",
+  "category": "runtime",
+  "guideline": "GUIDELINE.md",
+  "reference": "REFERENCE.md",
+  "skills": [
+    "cloudflare-workers-guidance"
+  ],
+  "supportedProjectModels": [
+    "development"
+  ],
+  "officialSources": [
+    "https://developers.cloudflare.com/workers/",
+    "https://developers.cloudflare.com/workers/platform/limits/",
+    "https://developers.cloudflare.com/workers/platform/pricing/",
+    "https://developers.cloudflare.com/workers/wrangler/environments/",
+    "https://developers.cloudflare.com/workers/wrangler/configuration/",
+    "https://developers.cloudflare.com/workers/configuration/secrets/",
+    "https://developers.cloudflare.com/workers/runtime-apis/context/"
+  ]
+}

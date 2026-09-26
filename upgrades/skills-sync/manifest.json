@@ -1,0 +1,15 @@
+{
+  "name": "skills-sync",
+  "description": "Compare kit skills with project skills for a selected AI surface and synchronize additions or updates.",
+  "mode": "semi-automatic",
+  "adds": [],
+  "patchTargets": [
+    ".agents/skills/",
+    ".claude/skills/",
+    "docs/BOOTSTRAP_ADOPTION.md"
+  ],
+  "notes": [
+    "Requires --ai-surface.",
+    "ADD and UPDATE are applied, EXTRA is never deleted automatically."
+  ]
+}

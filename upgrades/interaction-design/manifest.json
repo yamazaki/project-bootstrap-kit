@@ -1,0 +1,19 @@
+{
+  "name": "interaction-design",
+  "description": "Add interaction design planning document and references so GUI, CLI, and chat interfaces are considered during project setup.",
+  "mode": "semi-automatic",
+  "adds": [
+    "docs/WORK/0.1/interaction_design.md"
+  ],
+  "patchTargets": [
+    "AGENTS.md",
+    "docs/DEVELOPMENT_GUIDELINE.md",
+    "docs/DOCUMENTATION.md",
+    "docs/WORK/0.1/README.md",
+    "docs/BOOTSTRAP_ADOPTION.md"
+  ],
+  "notes": [
+    "Use this when the existing project bootstrap predates interaction design guidance.",
+    "This feature targets both GUI and non-GUI interfaces such as CLI and chat."
+  ]
+}

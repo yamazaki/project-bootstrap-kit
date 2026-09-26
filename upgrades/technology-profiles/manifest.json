@@ -1,0 +1,32 @@
+{
+  "name": "technology-profiles",
+  "description": "Add the composable Technology Profile system and optionally install one or more selected profiles.",
+  "mode": "semi-automatic",
+  "adds": [
+    "docs/TECHNOLOGY/INDEX.md",
+    "docs/TECHNOLOGY/ADOPTION.md",
+    ".agents/skills/technology-profile-governance/ or .claude/skills/technology-profile-governance/",
+    ".agents/skills/knowledge-feedback/ or .claude/skills/knowledge-feedback/",
+    "updated project-bootstrap and phase-transition skills",
+    "selected Technology Profile documents and skills"
+  ],
+  "patchTargets": [
+    "AGENTS.md",
+    "docs/DEVELOPMENT_GUIDELINE.md",
+    "docs/DOCUMENTATION.md",
+    "docs/INDEX.md",
+    "docs/WORK/0.1/README.md",
+    "docs/WORK/0.1/implementation_ready_checklist.md",
+    "docs/BOOTSTRAP_ADOPTION.md",
+    "legacy docs/PLATFORM_GUIDELINE.md"
+  ],
+  "notes": [
+    "Requires --ai-surface so common and profile-specific skills are installed consistently.",
+    "--technology-profile is optional and repeatable.",
+    "Profiles can be added after WORK/0.1 technology selection.",
+    "Customized profile documents are preserved as SKIP(KEEP).",
+    "A customized legacy PLATFORM_GUIDELINE.md is moved to LEGACY_PLATFORM_GUIDELINE.md for manual review.",
+    "Apply stops when a legacy guideline cannot be mapped safely.",
+    "This feature does not write to another repository or publish knowledge feedback."
+  ]
+}

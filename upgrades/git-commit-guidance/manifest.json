@@ -1,0 +1,17 @@
+{
+  "name": "git-commit-guidance",
+  "description": "Keep Git commit approval explicit while requiring clear Japanese commit messages and scoped staged changes.",
+  "mode": "semi-automatic",
+  "adds": [],
+  "patchTargets": [
+    "AGENTS.md",
+    "docs/DEVELOPMENT_GUIDELINE.md",
+    "docs/BOOTSTRAP_ADOPTION.md"
+  ],
+  "notes": [
+    "File-change approval does not imply commit approval.",
+    "Conventional Commit type and scope may remain in the project format, while the description and body are written in Japanese.",
+    "Existing project-specific guidance is preserved and missing guidance is appended.",
+    "This feature performs no Git operations."
+  ]
+}

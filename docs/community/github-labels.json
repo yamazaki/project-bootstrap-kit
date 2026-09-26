@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "labels": [
+    { "name": "type: bug", "color": "d73a4a", "description": "再現可能な不具合" },
+    { "name": "type: documentation", "color": "0075ca", "description": "文書の誤りまたは改善" },
+    { "name": "type: feature", "color": "a2eeef", "description": "新しい能力または重要な改善" },
+    { "name": "type: question", "color": "d876e3", "description": "利用方法や適用判断の質問" },
+    { "name": "area: project-model", "color": "5319e7", "description": "Project Modelに関する変更" },
+    { "name": "area: technology-profile", "color": "1d76db", "description": "Technology Profileに関する変更" },
+    { "name": "status: needs-triage", "color": "ededed", "description": "maintainerの初期確認待ち" },
+    { "name": "status: needs-info", "color": "fef2c0", "description": "追加情報待ち" },
+    { "name": "status: accepted", "color": "0e8a16", "description": "scopeとして受入済み" },
+    { "name": "status: duplicate", "color": "cfd3d7", "description": "既存Issueと重複" },
+    { "name": "status: blocked", "color": "b60205", "description": "外部条件または重要判断待ち" }
+  ]
+}

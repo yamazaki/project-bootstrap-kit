@@ -1,0 +1,25 @@
+{
+  "name": "work-line-routing",
+  "description": "Add hybrid user-invoked and AI-detected Epic, MNT, OPS, and ADV work-line routing with supporting skills and records.",
+  "mode": "semi-automatic",
+  "adds": [
+    "docs/WORK_LINE_ROUTING.md",
+    "docs/WORK/maintenance/",
+    "docs/WORK/operations/",
+    "docs/WORK/advisory/",
+    ".agents/skills/ or .claude/skills/ work-line skills"
+  ],
+  "patchTargets": [
+    "AGENTS.md",
+    "docs/INDEX.md",
+    "docs/DEVELOPMENT_GUIDELINE.md",
+    "docs/DOCUMENTATION.md",
+    "docs/BOOTSTRAP_ADOPTION.md"
+  ],
+  "notes": [
+    "Explicit skill invocation and AI classification route to the same work-line procedures.",
+    "When --ai-surface is omitted, existing .agents/skills and .claude/skills directories are detected.",
+    "Existing customized routing documents and skills are preserved and reported as WARN(KEEP).",
+    "This feature does not classify or migrate existing tasks automatically."
+  ]
+}

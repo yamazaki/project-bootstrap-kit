@@ -1,0 +1,17 @@
+{
+  "name": "e2e-runbook",
+  "description": "Add E2E and device verification runbook guidance to existing projects.",
+  "mode": "semi-automatic",
+  "adds": [],
+  "patchTargets": [
+    "docs/DEVELOPMENT_GUIDELINE.md",
+    "docs/DOCUMENTATION.md",
+    "docs/CODING_GUIDELINE.md",
+    "docs/BOOTSTRAP_ADOPTION.md"
+  ],
+  "notes": [
+    "Use this when implementation tasks need repeatable E2E, device, or environment-dependent verification.",
+    "This feature does not add WORK/x.y templates.",
+    "If docs/CODING_GUIDELINE.md is missing, apply the coding-guideline feature first."
+  ]
+}

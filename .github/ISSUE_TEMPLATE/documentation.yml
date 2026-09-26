@@ -1,0 +1,33 @@
+name: Documentation
+description: 文書の誤り、不足、分かりにくさを報告する
+title: "[Docs]: "
+labels: ["type: documentation", "status: needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: Securityやprivate情報はpublic Issueへ書かないでください。
+  - type: input
+    id: location
+    attributes:
+      label: 対象文書またはURL
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: 問題
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 改善案
+    validations:
+      required: false
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: 公開情報の確認
+      options:
+        - label: Secret、個人情報、会社の非公開情報を含めていません
+          required: true

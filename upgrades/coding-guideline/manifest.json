@@ -1,0 +1,18 @@
+{
+  "name": "coding-guideline",
+  "description": "Add coding guideline references and the semantic implementation rules document to an existing project.",
+  "mode": "semi-automatic",
+  "adds": [
+    "docs/CODING_GUIDELINE.md"
+  ],
+  "patchTargets": [
+    "AGENTS.md",
+    "docs/DEVELOPMENT_GUIDELINE.md",
+    "docs/INDEX.md",
+    "docs/BOOTSTRAP_ADOPTION.md"
+  ],
+  "notes": [
+    "Use this when the project bootstrap predates semantic coding rules.",
+    "This feature focuses on implementation practices, not formatter-specific rules."
+  ]
+}

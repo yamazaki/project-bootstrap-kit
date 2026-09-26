@@ -1,0 +1,25 @@
+name: Question
+description: 利用方法や適用判断について質問する
+title: "[Question]: "
+labels: ["type: question", "status: needs-triage"]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: 質問
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: 背景
+      description: Kit version、Project Model、確認済み文書を記載してください
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: 事前確認
+      options:
+        - label: README、FAQ、既存Issueを確認しました
+          required: true
+        - label: Securityやprivate情報を含めていません
+          required: true

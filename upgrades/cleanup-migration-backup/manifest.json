@@ -1,0 +1,14 @@
+{
+  "name": "cleanup-migration-backup",
+  "description": "Remove migration backup directories after the migrated skills have been verified.",
+  "mode": "semi-automatic",
+  "adds": [],
+  "patchTargets": [
+    ".migration-backup/skills/",
+    "docs/BOOTSTRAP_ADOPTION.md"
+  ],
+  "notes": [
+    "Run this only after confirming migrated skills work correctly.",
+    "This removes the backup copy and cannot be automatically restored."
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "phase-session-archive-governance",
+  "description": "Add reference-safe completed-phase session archiving and active-session-root checks to existing phase-based projects.",
+  "mode": "semi-automatic",
+  "adds": [],
+  "patchTargets": [
+    "AGENTS.md",
+    "docs/DEVELOPMENT_GUIDELINE.md",
+    "docs/DOCUMENTATION.md",
+    "docs/agent_sessions/README.md or existing mapped session-root README when present",
+    ".agents/skills/phase-transition/SKILL.md or .claude/skills/phase-transition/SKILL.md",
+    "docs/BOOTSTRAP_ADOPTION.md"
+  ],
+  "notes": [
+    "Use only for projects that manage work by explicit phases or milestones.",
+    "The feature adds governance and checks; it does not move session files automatically.",
+    "Existing session-root mappings, immutable references, and audit requirements must be preserved."
+  ]
+}

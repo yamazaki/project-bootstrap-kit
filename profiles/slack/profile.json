@@ -1,0 +1,15 @@
+{
+  "id": "slack",
+  "name": "Slack Platform",
+  "version": "1.0.0",
+  "category": "integration",
+  "guideline": "GUIDELINE.md",
+  "reference": null,
+  "skills": [],
+  "supportedProjectModels": [
+    "development"
+  ],
+  "officialSources": [
+    "https://api.slack.com/docs"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "name": "versioning",
+  "description": "Add ChangeLog operations, versioning documentation, references, and version governance skill to an existing project.",
+  "mode": "semi-automatic",
+  "adds": [
+    "CHANGELOG.md",
+    "docs/VERSIONING.md",
+    ".agents/skills/version-governance/ or .claude/skills/version-governance/"
+  ],
+  "patchTargets": [
+    "AGENTS.md",
+    "docs/DEVELOPMENT_GUIDELINE.md",
+    "docs/INDEX.md",
+    "docs/BOOTSTRAP_ADOPTION.md"
+  ],
+  "notes": [
+    "Use dry-run before apply.",
+    "An existing CHANGELOG.md is preserved; if it lacks an Unreleased section, review and adapt it manually.",
+    "Existing docs/VERSIONING.md project-specific settings are preserved while missing generic release policy sections are inserted.",
+    "The version-governance skill is synchronized to the selected AI surface.",
+    "Do not overwrite fully customized files without explicit review."
+  ]
+}

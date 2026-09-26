@@ -1,0 +1,23 @@
+{
+  "name": "project-bootstrap-planning",
+  "description": "Upgrade initial project planning with requirement elicitation, technology facilitation, non-functional requirements, and explicit PoC versus initial usable delivery stages.",
+  "mode": "semi-automatic",
+  "adds": [
+    "docs/WORK/0.1/product_definition.md",
+    ".agents/skills/project-bootstrap/ or .claude/skills/project-bootstrap/"
+  ],
+  "patchTargets": [
+    "AGENTS.md",
+    "docs/DEVELOPMENT_GUIDELINE.md",
+    "docs/DOCUMENTATION.md",
+    "docs/WORK/0.1/README.md",
+    ".agents/skills/README.md or .claude/skills/README.md",
+    "docs/BOOTSTRAP_ADOPTION.md"
+  ],
+  "notes": [
+    "Existing concept_template.md files are preserved.",
+    "Completed or edited idea, phase, interaction, roadmap, and checklist documents are not overwritten.",
+    "Use the new template primarily for new projects, major reconception, or future product planning.",
+    "Pass --ai-surface to update the project-bootstrap skill on the selected AI surface."
+  ]
+}

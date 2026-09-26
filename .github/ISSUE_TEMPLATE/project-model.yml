@@ -1,0 +1,40 @@
+name: Project Model proposal
+description: 新しいProject Modelまたは既存Modelの重要な変更を提案する
+title: "[Model]: "
+labels: ["area: project-model", "type: feature", "status: needs-triage"]
+body:
+  - type: input
+    id: model-name
+    attributes:
+      label: Model名または対象Model
+    validations:
+      required: true
+  - type: textarea
+    id: use-case
+    attributes:
+      label: 主な用途と成果物
+    validations:
+      required: true
+  - type: textarea
+    id: gap
+    attributes:
+      label: development / task-workspaceでは不足する理由
+    validations:
+      required: true
+  - type: textarea
+    id: lifecycle
+    attributes:
+      label: 想定lifecycleと必須asset
+    validations:
+      required: true
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Common Core、既存Model、migrationへの影響
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: 公開情報の確認
+      options:
+        - label: 実在するprivate projectの情報を含めず、一般化しています
+          required: true

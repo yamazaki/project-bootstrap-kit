@@ -1,0 +1,16 @@
+{
+  "name": "session-operation-policy",
+  "description": "Add session operation policy guidance to the current phase plan and related project documents.",
+  "mode": "semi-automatic",
+  "adds": [],
+  "patchTargets": [
+    "AGENTS.md",
+    "docs/DEVELOPMENT_GUIDELINE.md",
+    "docs/PLAN_PHASE_CURRENT.md",
+    "docs/BOOTSTRAP_ADOPTION.md"
+  ],
+  "notes": [
+    "Use this when the project does not yet define phase-level session granularity guidance.",
+    "This feature patches existing planning documents instead of replacing them."
+  ]
+}

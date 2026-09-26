@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "models": [
+    {
+      "id": "development",
+      "name": "Development",
+      "version": "1.0.0",
+      "status": "stable",
+      "manifest": "development/model.json",
+      "default": true
+    },
+    {
+      "id": "task-workspace",
+      "name": "Task Workspace",
+      "version": "0.1.0",
+      "status": "preview",
+      "manifest": "task-workspace/model.json",
+      "default": false
+    }
+  ]
+}

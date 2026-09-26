@@ -1,0 +1,15 @@
+{
+  "id": "questetra",
+  "name": "Questetra",
+  "version": "1.0.0",
+  "category": "runtime",
+  "guideline": "GUIDELINE.md",
+  "reference": null,
+  "skills": [],
+  "supportedProjectModels": [
+    "development"
+  ],
+  "officialSources": [
+    "https://questetra.com/"
+  ]
+}

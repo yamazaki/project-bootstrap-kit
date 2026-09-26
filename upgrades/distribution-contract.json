@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "adoptionPlanSchemaVersion": 2,
+  "upgradePlanSchemaVersion": 2,
+  "bootstrapStateSchemaVersion": 2,
+  "pathCoverage": "generated-snapshot-state",
+  "engineManagedPaths": [
+    "docs/BOOTSTRAP_ADOPTION.md",
+    "docs/BOOTSTRAP_STATE.json"
+  ],
+  "nonSkippablePaths": [
+    "docs/BOOTSTRAP_ADOPTION.md",
+    "docs/BOOTSTRAP_STATE.json"
+  ],
+  "baseline": {
+    "algorithm": "sha256",
+    "objectMaxBytes": 4194304,
+    "operationMaxBytes": 67108864,
+    "root": ".project-bootstrap/baselines/sha256"
+  },
+  "ownershipValues": [
+    "kit-managed",
+    "managed-merge",
+    "project-owned",
+    "mapped",
+    "intentionally-absent"
+  ],
+  "pathDecisionValues": [
+    "unresolved",
+    "add",
+    "skip",
+    "keep",
+    "replace",
+    "manual-merged",
+    "accepted-deviation",
+    "deferred",
+    "safe-update"
+  ],
+  "featureStateValues": [
+    "applied",
+    "accepted-deviation",
+    "not-applicable",
+    "pending-review"
+  ]
+}

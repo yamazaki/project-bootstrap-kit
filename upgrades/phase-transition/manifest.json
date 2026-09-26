@@ -1,0 +1,20 @@
+{
+  "name": "phase-transition",
+  "description": "Add phase closing, next-phase planning, carry-over ledger, and phase-transition skill guidance to an existing project.",
+  "mode": "semi-automatic",
+  "adds": [
+    ".agents/skills/phase-transition/ or .claude/skills/phase-transition/"
+  ],
+  "patchTargets": [
+    "AGENTS.md",
+    "docs/DEVELOPMENT_GUIDELINE.md",
+    "docs/DOCUMENTATION.md",
+    ".agents/skills/README.md or .claude/skills/README.md",
+    "docs/BOOTSTRAP_ADOPTION.md"
+  ],
+  "notes": [
+    "Use this when a project needs a repeatable phase closing and next-phase planning process.",
+    "Pass --ai-surface to add the phase-transition skill to the selected AI surface.",
+    "This feature does not automatically archive or rewrite the active phase plan."
+  ]
+}

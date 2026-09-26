@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "id": "task-workspace",
+  "name": "Task Workspace",
+  "version": "0.1.0",
+  "status": "preview",
+  "sourceRoot": "models/task-workspace/files",
+  "requireExactCoverage": true,
+  "defaultOwnership": "kit-managed",
+  "technologyProfilePolicy": "none",
+  "aiSurfaces": ["codex", "claude", "both", "rovo"],
+  "skillRoot": "skills",
+  "sharedAssets": [
+    {
+      "source": "boilerplate/.gitignore",
+      "target": ".gitignore",
+      "kind": "direct"
+    },
+    {
+      "source": "boilerplate/_CLAUDE.md",
+      "target": "CLAUDE.md",
+      "kind": "conditional",
+      "condition": "claude"
+    },
+    {
+      "source": "boilerplate/skills/capture-inbox/SKILL.md",
+      "target": "skills/capture-inbox/SKILL.md",
+      "kind": "skill"
+    },
+    {
+      "source": "boilerplate/skills/feedback-preparation/SKILL.md",
+      "target": "skills/feedback-preparation/SKILL.md",
+      "kind": "skill"
+    },
+    {
+      "source": "boilerplate/skills/feedback-preparation/scripts/prepare-feedback.mjs",
+      "target": "skills/feedback-preparation/scripts/prepare-feedback.mjs",
+      "kind": "skill"
+    }
+  ],
+  "assets": [
+    "_AGENTS.md",
+    "README.md",
+    "SESSION_HANDOFF.md",
+    "context/CONTEXT.md",
+    "context/MASTER.md",
+    "docs/ADR/README.md",
+    "docs/DOCUMENTATION.md",
+    "docs/INDEX.md",
+    "docs/REF/README.md",
+    "docs/WORK/inbox/README.md",
+    "docs/WORK/inbox/closed/.gitkeep",
+    "docs/WORK/inbox/deferred/.gitkeep",
+    "docs/WORK/inbox/open/.gitkeep",
+    "docs/WORK/inbox/promoted/.gitkeep",
+    "docs/WORK/inbox/triaged/.gitkeep",
+    "docs/history/README.md",
+    "outputs/README.md",
+    "sessions/SESSION_INDEX.md",
+    "sessions/session_template.md",
+    "skills/doc-governance/SKILL.md",
+    "skills/session-handoff/SKILL.md"
+  ],
+  "mappings": {
+    "_AGENTS.md": {
+      "target": "AGENTS.md",
+      "kind": "rename"
+    }
+  },
+  "requiredPaths": [
+    "AGENTS.md",
+    "README.md",
+    "SESSION_HANDOFF.md",
+    "context/CONTEXT.md",
+    "context/MASTER.md",
+    "docs/DOCUMENTATION.md",
+    "docs/INDEX.md",
+    "outputs/README.md",
+    "sessions/SESSION_INDEX.md",
+    "sessions/session_template.md"
+  ],
+  "optionalPaths": [
+    "CLAUDE.md",
+    "docs/ADR/README.md",
+    "docs/REF/README.md",
+    "docs/WORK/inbox/README.md",
+    "docs/history/README.md"
+  ]
+}

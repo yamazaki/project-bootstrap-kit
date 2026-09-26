@@ -1,0 +1,13 @@
+{
+  "name": "skills-surface-migration",
+  "description": "Move legacy project-local skills/ into AI-surface specific locations such as .agents/skills/ and .claude/skills/.",
+  "mode": "semi-automatic",
+  "adds": [],
+  "patchTargets": [
+    "docs/BOOTSTRAP_ADOPTION.md"
+  ],
+  "notes": [
+    "Requires --ai-surface.",
+    "Moves or backs up legacy skills/ instead of leaving it in place."
+  ]
+}

@@ -1,0 +1,42 @@
+name: Technology Profile proposal
+description: 新しいTechnology Profileまたは既存profileの変更を提案する
+title: "[Profile]: "
+labels: ["area: technology-profile", "type: feature", "status: needs-triage"]
+body:
+  - type: input
+    id: technology
+    attributes:
+      label: Technology / platform
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options: [runtime, integration, storage, framework, tooling, other]
+    validations:
+      required: true
+  - type: textarea
+    id: use-case
+    attributes:
+      label: 一般化できる用途と制約
+    validations:
+      required: true
+  - type: textarea
+    id: sources
+    attributes:
+      label: 公式source
+      description: 変動する仕様は公式URLと確認日を記載してください
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 実証範囲と反例
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: 公開情報の確認
+      options:
+        - label: 顧客、tenant、account、credential等のprivate情報を含めていません
+          required: true
