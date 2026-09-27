@@ -4,6 +4,12 @@
 
 ### Distribution
 
+## v0.10.1 - 2026-09-27
+
+### Distribution
+
+- development Modelのasset追加後も54件を期待していた公開回帰testを、現行manifestの56件と一致させた
+
 ## v0.10.0 - 2026-09-26
 
 ### Distribution

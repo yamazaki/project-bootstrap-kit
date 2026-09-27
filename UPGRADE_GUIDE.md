@@ -17,6 +17,10 @@
 
 現時点で次回release向けの追加対応はない。
 
+## v0.10.1
+
+公開回帰testの期待値だけを現行Project Model manifestへ合わせたPATCH releaseである。配布内容、初期化、upgradeの挙動は変わらないため、既存プロジェクト側の対応は不要。
+
 ## v0.10.0
 
 ### Project Modelとstate schema 2

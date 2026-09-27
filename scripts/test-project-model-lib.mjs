@@ -35,7 +35,7 @@ assert(resolveProjectModel(catalog, "task-workspace").status === "preview", "tas
 assertThrows(() => resolveProjectModel(catalog, "unknown"), /Unknown project model/u, "unknown Project Model is rejected");
 
 const development = resolveProjectModel(catalog, "development");
-assert(development.assets.length === 54, "development manifest covers 54 boilerplate files");
+assert(development.assets.length === 56, "development manifest covers 56 boilerplate files");
 assert(development.assets.find((entry) => entry.sourceRelativePath === "_AGENTS.md")?.target === "AGENTS.md", "AGENTS mapping is explicit");
 assert(development.assets.find((entry) => entry.sourceRelativePath === "_CLAUDE.md")?.condition === "claude", "CLAUDE mapping is conditional");
 
