@@ -337,6 +337,8 @@ session archiveではsession rootを固定しない。mature adopterのmapping�
   - 文書分類、命名、昇格、棚卸しを補助する
 - `skills/project-bootstrap/`
   - 対話的な要求開発、技術・非機能要件の検討、検証段階の定義、ロードマップと WBS の作成を補助する
+- `skills/project-bootstrap-kit-upgrade/`
+  - project-bootstrap-kitの更新、旧adopterのstate移行、利用者とAIによる判断・逐次統合を補助する
 - `skills/version-governance/`
   - version 更新判断、更新対象、更新手順確認を補助する
 - `skills/phase-transition/`

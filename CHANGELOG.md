@@ -4,6 +4,13 @@
 
 ### Distribution
 
+## v0.11.0 - 2026-10-03
+
+### Distribution
+
+- 旧adopterのscanにslug指定を追加し、pending adoption planへpreview付きの判断表一括記入を提供
+- development Modelへ `project-bootstrap-kit-upgrade` skillを追加し、逐次統合、plan保管、更新経路の判別と並行文書作業の順序を案内。指定外managed pathの安全検査は維持
+
 ## v0.10.1 - 2026-09-27
 
 ### Distribution

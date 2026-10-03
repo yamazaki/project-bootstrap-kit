@@ -45,7 +45,7 @@ node scripts/verify-project-init.mjs \
 
 ## State upgrade commands
 
-stateがない旧adopterでも同じscan commandを使用する。upgrade scriptはadoption記録からmetadataを復元し、state migration planを生成する。不足または変更がある場合は`--project-name`、`--product-name`、`--ai-surface`、`--technology-profile`を明示する。
+stateがない旧adopterでも同じscan commandを使用する。upgrade scriptはadoption記録からmetadataを復元し、state migration planを生成する。不足または変更がある場合は`--project-name`、`--project-slug`、`--product-name`、`--ai-surface`、`--technology-profile`を明示する。slug指定はstateなしの旧adopterだけで受け付ける。
 
 ```bash
 node scripts/upgrade-project.mjs \
@@ -55,6 +55,8 @@ node scripts/upgrade-project.mjs \
 ```
 
 旧adopter migration planのsafe-onlyとmanual mergeもupgrade scriptから実行できる。
+
+adoption判断の一括記入は `--set-adoption-decisions <plan> --decisions <json>` でpreviewし、`--apply`でplanだけを保存する。形式と逐次統合は[adoption guide](../guides/existing-project-adoption.md)、3経路のCLI対応とplan保管は[upgrade guide](../guides/upgrading.md)を参照する。
 
 ```bash
 node scripts/upgrade-project.mjs --apply-plan /tmp/migration/plan.json --apply-safe-only

@@ -21,6 +21,7 @@ description: Use when closing a project phase, checking phase completion, archiv
    - 対象フェーズの `docs/WORK/<phase>.*`
    - 関連する `SPEC / ADR / REF / Runbook`
    - `docs/TECHNOLOGY/INDEX.md` と `docs/TECHNOLOGY/ADOPTION.md`
+   - kit更新が保留中なら、managed pathを編集する前に更新を先行するか、フェーズ作業後に再scanするかを決める。更新手順は `project-bootstrap-kit-upgrade` skillを参照する
 2. 現行フェーズのクローズ
    - 目標、IN / OUT、完了条件、WBS 状態を照合する
    - 未完了、後続送り、スコープ外を明示する

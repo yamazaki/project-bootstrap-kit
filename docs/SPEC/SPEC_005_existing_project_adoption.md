@@ -36,6 +36,16 @@ CONFLICTはfile単位で次のresolutionを持つ。
 
 schema 2では、明示CLIによるmanual merge受入時だけ指定CONFLICT path自身の変更を許可する。plan記録済みimmutable evidenceと指定外managed pathは従来どおり一致を要求し、受入後にcurrent kind/mode/hashとmanaged fingerprintを更新する。
 
+manual mergeはAIによる統合編集も含め、1file編集→受入→次のfileの順とする。複数managed pathを先に編集した場合は最初の受入を拒否する。この指定外path検査は維持する。
+
+### 4.1 判断表による一括記入
+
+`upgrade-project.mjs --set-adoption-decisions <plan> --decisions <json>` は `operation: adopt-existing` のpending schema 2 planを対象とする。既定はpreview、`--apply`でplanだけを原子的に置換する。target内容、snapshot、immutable evidenceは変更しない。
+
+入力は1 MiB以下の通常JSON fileで、`{schemaVersion: 1, decisions: [...]}` とする。各行の許可fieldはpath、resolution、reason、confirmAdd、confirmReplace、satisfiedBy、supersededByだけ。ADDにはadd/skip、CONFLICTにはkeep/replaceを使い、全行に文字列の1行reasonを必須とする。add/replaceにはそれぞれtrueの明示確認を必須とし、mappingはskipだけに許可する。
+
+partial tableを許可し、未記載pathは保持する。不明・重複・不正path、状態不適合、確認不足、理由不足、不正/不存在/target外mapping、engine-managed pathの禁止判断、immutable改変、staleは保存前に全体拒否する。保存前にplan/evidenceを再照合する。空table、hash・ownership・受入日時などの追加field、manual-mergedの設定・受入済みmanual mergeの上書きを拒否する。未解決一覧を返し、通常apply時の全path検証は引き続き必須とする。
+
 初回adoptionの`docs/BOOTSTRAP_ADOPTION.md`はadoption状態の正本であるため`keep`を許可しない。stateなしlegacy adopter migrationでは例外としてengineが既存recordを保持し、実時刻のmigration履歴とcomplete metadataを追記する。directoryとfileの競合も自動replaceせず、手動解決とplan再生成を求める。
 
 ## 5. safe-only

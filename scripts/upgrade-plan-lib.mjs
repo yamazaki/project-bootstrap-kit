@@ -54,9 +54,10 @@ function validateAdoptedTarget(targetRoot, operationLabel) {
   }
 }
 
-export function scanUpgradeTarget({ rootDir, targetRoot, planOutput, aiSurface, technologyProfiles = [], projectName, productName }) {
+export function scanUpgradeTarget({ rootDir, targetRoot, planOutput, aiSurface, technologyProfiles = [], projectName, projectSlug, productName }) {
   const normalizedTarget = path.resolve(targetRoot);
   validateAdoptedTarget(normalizedTarget, "upgrade scan");
+  if (projectSlug !== undefined && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(projectSlug)) throw new Error("Invalid project slug. Use lowercase kebab-case.");
   if (!fs.existsSync(path.join(normalizedTarget, STATE_RELATIVE_PATH))) {
     const metadata = adoptionMetadata(normalizedTarget);
     const selectedAiSurface = aiSurface || metadata.aiSurface;
@@ -68,7 +69,7 @@ export function scanUpgradeTarget({ rootDir, targetRoot, planOutput, aiSurface, 
       targetRoot: normalizedTarget,
       projectModel: resolveProjectModel(loadProjectModelCatalog(rootDir), "development"),
       projectName: projectName || metadata.projectName,
-      projectSlug: metadata.projectName,
+      projectSlug: projectSlug ?? metadata.projectName,
       productName: productName || metadata.productName,
       aiSurface: selectedAiSurface,
       technologyProfiles: technologyProfiles.length > 0 ? technologyProfiles : metadata.technologyProfiles,
@@ -77,6 +78,7 @@ export function scanUpgradeTarget({ rootDir, targetRoot, planOutput, aiSurface, 
     });
   }
   const rawState = readJson(path.join(normalizedTarget, STATE_RELATIVE_PATH));
+  if (projectSlug !== undefined) throw new Error("--project-slug is only supported for legacy adopters without bootstrap state; changing an existing state identity requires a separate migration.");
   if (rawState.schemaVersion === 1) {
     console.log("Bootstrap state schema 1 detected; creating a metadata-only schema migration plan.");
     return scanStateSchemaMigration({ rootDir, targetRoot: normalizedTarget, planOutput, projectName });

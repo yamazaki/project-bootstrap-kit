@@ -89,6 +89,7 @@ feature stateは`applied / accepted-deviation / not-applicable / pending-review`
 - v0.7.0以前のplan schema 1は非互換として拒否する
 - stateがないprojectはlatest kitへ再adoptionし、最初のU0/L0を確立する
 - adoption記録があるstateなし旧adopterでは、upgrade scanがmetadataを復元して再adoption planへ自動routingする
+- stateなしlegacy scanは`--project-slug`の明示値を推定値より優先する。未指定時の推定は維持し、initと同じlowercase kebab-caseを検証する。stateあり経路はslug指定を拒否し、identity改名を通常scanへ混在させない
 - 過去upstreamを推測復元しない
 - state schema 1はmetadata-only migration planでschema 2へ更新する。旧`project.name`をslug、旧`productName`をproduct name候補とし、人向けproject nameは明示確認を必須とする
 - schema migrationはcontent fileを変更せず、stateとhuman-readable adoption metadataだけを更新する。stale / integrity / clean kit HEADを確認し、再実行は`SKIP(SAME)`とする

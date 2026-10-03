@@ -14,7 +14,7 @@ import {
 } from "./upgrade-lib.mjs";
 import { applyUpgradePlan, scanUpgradeTarget } from "./upgrade-plan-lib.mjs";
 import { acceptUpgradeDecision, updateFeatureState, updatePathOwnership } from "./bootstrap-upgrade-state-lib.mjs";
-import { acceptAdoptionManualMerge } from "./adoption-plan-lib.mjs";
+import { acceptAdoptionManualMerge, setAdoptionDecisions } from "./adoption-plan-lib.mjs";
 import { readAndValidateBootstrapState, STATE_RELATIVE_PATH } from "./bootstrap-state-lib.mjs";
 
 const rootDir = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
@@ -38,8 +38,9 @@ function usage() {
   console.log(`Usage:
   node scripts/upgrade-project.mjs --target <path> --feature <name> [--ai-surface <codex|claude|rovo|both>] [--technology-profile <profile-id> ...] [--dry-run|--apply]
   node scripts/upgrade-project.mjs --target <path> --feature <name> [--ai-surface <codex|claude|rovo|both>] [--technology-profile <profile-id> ...] --diff [--diff-output <path>]
-  node scripts/upgrade-project.mjs --target <path> --scan [--project-name <name>] [--product-name <name>] [--ai-surface <codex|claude|rovo|both>] [--technology-profile <profile-id> ...] [--plan-output <path>]
+  node scripts/upgrade-project.mjs --target <path> --scan [--project-name <name>] [--project-slug <slug>] [--product-name <name>] [--ai-surface <codex|claude|rovo|both>] [--technology-profile <profile-id> ...] [--plan-output <path>]
   node scripts/upgrade-project.mjs --apply-plan <path> [--target <path>] [--apply-safe-only]
+  node scripts/upgrade-project.mjs --set-adoption-decisions <plan> --decisions <json> [--dry-run|--apply]
   node scripts/upgrade-project.mjs --accept-adoption-manual-merge <plan> --path <path> --reason <reason>
   node scripts/upgrade-project.mjs --accept-path-decision <plan> --path <path> --decision <value> --reason <reason> [--confirm]
   node scripts/upgrade-project.mjs --target <path> --update-path-state --path <path> --ownership <value> --reason <reason> [--satisfied-by <path>|--superseded-by <path>]
@@ -53,6 +54,8 @@ Options:
   --plan-output <path>           Scan plan output. Default: <target>/.bootstrap-upgrade-diff/upgrade-plan_<timestamp>.json
   --include-review               Include REVIEW features in the generated plan
   --apply-safe-only              Apply only approved ADD paths in a state migration plan
+  --set-adoption-decisions <plan> Preview adoption decision edits; save only with --apply
+  --decisions <json>             schemaVersion 1 decision table for adopt-existing plans
   --accept-adoption-manual-merge Record a migration-plan manual merge decision
   --accept-path-decision <path>  Record a reviewed state-upgrade path decision
   --update-path-state            Change ownership/path state without editing the manifest directly
@@ -60,6 +63,7 @@ Options:
   --ai-surface <value>           codex | claude | rovo | both
   --technology-profile <id>      Repeatable technology profile selector
   --project-name <name>          Override legacy adoption project name inference
+  --project-slug <slug>          Override legacy slug inference (no bootstrap state only)
   --product-name <name>          Override legacy adoption product name inference
   --dry-run                      Preview only
   --apply                        Apply the feature
@@ -71,7 +75,14 @@ Available features:
   ${featureNames.join("\n  ")}
 
 Available technology profiles:
-  ${profileNames.join("\n  ")}`);
+  ${profileNames.join("\n  ")}
+
+Plan routing (check plan.operation before choosing a command):
+  adopt-existing: --set-adoption-decisions, --accept-adoption-manual-merge, --apply-plan [--apply-safe-only]
+  state-upgrade: --accept-path-decision, --apply-plan (no safe-only)
+  bootstrap-state-schema-migration: --apply-plan (metadata only; no path acceptance)
+Manual merge: edit ONE managed file, accept it, then edit the next. Other managed paths must still match the plan.
+Each scan writes a plan and bundle, including CURRENT-only checks. See docs/guides/upgrading.md for retention and cleanup.`);
 }
 
 function parseArgs(argv) {
@@ -97,6 +108,8 @@ function parseArgs(argv) {
     featureState: "",
     evidence: [],
     projectName: "",
+    projectSlug: undefined,
+    decisionsFile: "",
     productName: "",
     applySafeOnly: false,
   };
@@ -127,6 +140,13 @@ function parseArgs(argv) {
     } else if (arg === "--accept-adoption-manual-merge") {
       args.operation = "accept-adoption-manual-merge";
       args.applyPlan = argv[i + 1] ?? "";
+      i += 1;
+    } else if (arg === "--set-adoption-decisions") {
+      args.operation = "set-adoption-decisions";
+      args.applyPlan = argv[i + 1] ?? "";
+      i += 1;
+    } else if (arg === "--decisions") {
+      args.decisionsFile = argv[i + 1] ?? "";
       i += 1;
     } else if (arg === "--update-path-state") {
       args.operation = "update-path-state";
@@ -160,6 +180,9 @@ function parseArgs(argv) {
       i += 1;
     } else if (arg === "--project-name") {
       args.projectName = argv[i + 1] ?? "";
+      i += 1;
+    } else if (arg === "--project-slug") {
+      args.projectSlug = argv[i + 1] ?? "";
       i += 1;
     } else if (arg === "--product-name") {
       args.productName = argv[i + 1] ?? "";
@@ -202,6 +225,18 @@ function parseArgs(argv) {
   }
   if (args.operation === "apply-plan" && !args.applyPlan) {
     usage();
+    process.exit(1);
+  }
+  if (args.operation === "set-adoption-decisions" && (!args.applyPlan || !args.decisionsFile)) {
+    usage();
+    process.exit(1);
+  }
+  if (args.decisionsFile && args.operation !== "set-adoption-decisions") {
+    console.error("--decisions requires --set-adoption-decisions.");
+    process.exit(1);
+  }
+  if (args.projectSlug !== undefined && (args.operation !== "scan" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(args.projectSlug))) {
+    console.error("--project-slug requires --scan and a lowercase kebab-case slug.");
     process.exit(1);
   }
   if (args.operation === "accept-path-decision" && (!args.applyPlan || !args.decisionPath || !args.decision || !args.reason)) {
@@ -459,10 +494,24 @@ if (args.operation === "scan") {
       includeReview: args.includeReview,
       planOutput: args.planOutput,
       projectName: args.projectName,
+      projectSlug: args.projectSlug,
       productName: args.productName,
     });
   } catch (error) {
     console.error(`Upgrade scan failed: ${error.message}`);
+    process.exit(1);
+  }
+  process.exit(0);
+}
+
+if (args.operation === "set-adoption-decisions") {
+  try {
+    const result = setAdoptionDecisions({ rootDir, planPath: args.applyPlan, decisionsPath: args.decisionsFile, apply: args.mode === "apply" });
+    for (const change of result.changes) console.log(`[${result.applied ? "SAVED" : "PREVIEW"}] ${change.path}: ${change.from} -> ${change.to}`);
+    console.log(`Unresolved (${result.unresolved.length}): ${result.unresolved.join(", ") || "none"}`);
+    if (!result.applied) console.log("Plan and target are unchanged. Review the decision table, then use --apply to save the plan only.");
+  } catch (error) {
+    console.error(`Adoption decision edits failed: ${error.message}`);
     process.exit(1);
   }
   process.exit(0);

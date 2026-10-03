@@ -211,7 +211,7 @@ function validatePlan(plan, planPath, rootDir, allowChangedPath = null) {
     const upstream = entryInfo(snapshotPath(planPath), item.path);
     if (upstream.hash !== item.U1 || (item.path !== allowChangedPath && entryInfo(targetRoot, item.path).hash !== item.L1)) {
       const manual = item.decision === "manual-merged" && item.acceptedProjectHash === entryInfo(targetRoot, item.path).hash;
-      if (!manual) throw new Error(`Upgrade evidence changed: ${item.path}`);
+      if (!manual) throw new Error(`Upgrade evidence changed: ${item.path}. Manual merge must proceed one file at a time: edit one file, accept it, then edit the next. Preserve your edits before recreating a stale plan.`);
     }
   }
   return { targetRoot, state, contract };
@@ -220,6 +220,7 @@ function validatePlan(plan, planPath, rootDir, allowChangedPath = null) {
 export function acceptUpgradeDecision({ rootDir, planPath, relativePath, decision, reason, confirm = false }) {
   const resolved = path.resolve(planPath);
   const plan = readJson(resolved);
+  if (plan.operation !== "state-upgrade") throw new Error("--accept-path-decision requires operation state-upgrade. For adopt-existing use --accept-adoption-manual-merge; schema migration has no path decisions.");
   const { targetRoot, contract } = validatePlan(plan, resolved, rootDir, decision === "manual-merged" ? relativePath : null);
   if (!["manual-merged", "accepted-deviation", "deferred", "safe-update", "add", "skip"].includes(decision)) throw new Error(`Unsupported decision: ${decision}`);
   const item = plan.paths.find((entry) => entry.path === relativePath);

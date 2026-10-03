@@ -181,7 +181,7 @@ function validatePlanStructure(plan, planPath, rootDir, allowCompleted = false, 
     const current = entryInfo(targetRoot, entry.path);
     const safeApplied = entry.status === "ADD" && current.exists && current.kind === entry.upstream.kind && current.hash === entry.upstream.hash && current.mode === entry.upstream.mode;
     const manualMerged = entry.status === "CONFLICT" && entry.resolution === "manual-merged" && entry.acceptedProjectHash === current.hash;
-    if (JSON.stringify(current) !== JSON.stringify(entry.project) && !safeApplied && !manualMerged && entry.path !== allowChangedPath) throw new Error(`Managed target evidence changed: ${entry.path}`);
+    if (JSON.stringify(current) !== JSON.stringify(entry.project) && !safeApplied && !manualMerged && entry.path !== allowChangedPath) throw new Error(`Managed target evidence changed: ${entry.path}. Manual merge must proceed one file at a time: edit one file, accept it, then edit the next. Preserve your edits before recreating a stale plan.`);
   }
   const recordedEvidence = plan.files.map((entry) => ({ path: entry.path, current: entry.project })).sort((left, right) => left.path.localeCompare(right.path));
   if (plan.managedFingerprint !== managedFingerprintFromEvidence(recordedEvidence, immutableMetadata(plan))) throw new Error("Plan immutable evidence or recorded fingerprint changed.");
@@ -195,8 +195,75 @@ function validatePlanStructure(plan, planPath, rootDir, allowCompleted = false, 
 function validateMappedReference(targetRoot, entry) {
   const reference = entry.satisfiedBy || entry.supersededBy;
   if (!reference) return;
-  if (path.isAbsolute(reference) || reference.split(path.sep).includes("..")) throw new Error(`${entry.path}: mapped reference is invalid`);
+  if (typeof reference !== "string" || path.isAbsolute(reference) || reference.includes("\\") || reference.split("/").some((part) => !part || part === "." || part === "..")) throw new Error(`${entry.path}: mapped reference is invalid`);
   if (!entryExists(path.join(targetRoot, reference))) throw new Error(`${entry.path}: mapped reference does not exist: ${reference}`);
+  const realTarget = fs.realpathSync(targetRoot);
+  const realReference = fs.realpathSync(path.join(targetRoot, reference));
+  if (!realReference.startsWith(`${realTarget}${path.sep}`)) throw new Error(`${entry.path}: mapped reference resolves outside target`);
+}
+
+// Decision tables edit mutable fields only. The full plan evidence is checked before
+// validation and immediately before the atomic save; target files are never written.
+export function setAdoptionDecisions({ rootDir, planPath, decisionsPath, apply = false }) {
+  const resolved = path.resolve(planPath);
+  if (!fs.lstatSync(resolved).isFile()) throw new Error("Decision editing requires a regular plan file, not a symlink.");
+  const original = fs.readFileSync(resolved, "utf8");
+  const plan = JSON.parse(original);
+  if (plan.operation !== "adopt-existing") throw new Error("Decision tables require operation adopt-existing. For state-upgrade use --accept-path-decision; schema migration has no path decisions.");
+  const { targetRoot } = validatePlanStructure(plan, resolved, rootDir);
+  const inputPath = path.resolve(decisionsPath);
+  if (inputPath === resolved) throw new Error("The decision table must be separate from the plan.");
+  const stat = fs.lstatSync(inputPath);
+  if (!stat.isFile() || stat.size > 1024 * 1024) throw new Error("Decision table must be a regular JSON file of at most 1 MiB.");
+  const table = readJson(inputPath);
+  const isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+  if (!isObject(table) || Object.keys(table).some((key) => !["schemaVersion", "decisions"].includes(key)) || table.schemaVersion !== 1 || !Array.isArray(table.decisions) || table.decisions.length === 0) throw new Error("Expected {schemaVersion: 1, decisions: [explicit path decisions]}.");
+  const allowedKeys = new Set(["path", "resolution", "reason", "confirmAdd", "confirmReplace", "satisfiedBy", "supersededBy"]);
+  const seen = new Set();
+  const changedEntries = [];
+  const changes = [];
+  for (const row of table.decisions) {
+    if (!isObject(row) || Object.keys(row).some((key) => !allowedKeys.has(key))) throw new Error("Decision row contains unsupported fields; hashes, ownership and acceptance evidence cannot be supplied.");
+    if (typeof row.path !== "string" || !row.path || row.path.includes("\\") || path.isAbsolute(row.path) || row.path.split("/").some((part) => !part || part === "." || part === "..") || seen.has(row.path)) throw new Error("Invalid or duplicate decision path.");
+    seen.add(row.path);
+    const entry = plan.files.find((item) => item.path === row.path);
+    if (!entry || !["ADD", "CONFLICT"].includes(entry.status)) throw new Error(`${row.path}: path is not a reviewable ADD or CONFLICT`);
+    if (entry.resolution === "manual-merged") throw new Error(`${row.path}: accepted manual merge cannot be replaced by a decision table`);
+    const values = entry.status === "ADD" ? ["add", "skip"] : ["keep", "replace"];
+    if (!values.includes(row.resolution)) throw new Error(`${row.path}: resolution must be ${values.join(" or ")}; manual merge requires the dedicated acceptance CLI`);
+    if (("confirmAdd" in row && row.resolution !== "add") || ("confirmReplace" in row && row.resolution !== "replace") || (("satisfiedBy" in row || "supersededBy" in row) && row.resolution !== "skip")) throw new Error(`${row.path}: fields do not match the resolution`);
+    if (row.satisfiedBy && row.supersededBy) throw new Error(`${row.path}: choose only one mapped reference`);
+    for (const key of ["satisfiedBy", "supersededBy"]) if (key in row && (typeof row[key] !== "string" || !row[key])) throw new Error(`${row.path}: mapped reference must be a nonempty path`);
+    if (typeof row.reason !== "string") throw new Error(`${row.path}: reason must be a string`);
+    if (row.resolution === "add" && row.confirmAdd !== true) throw new Error(`${row.path}: add requires confirmAdd: true`);
+    if (row.resolution === "replace" && row.confirmReplace !== true) throw new Error(`${row.path}: replace requires confirmReplace: true`);
+    const reason = validateSingleLineReason(row.reason, row.path);
+    changes.push({ path: row.path, from: entry.resolution, to: row.resolution });
+    Object.assign(entry, {
+      resolution: row.resolution, reason,
+      confirmAdd: row.resolution === "add" && row.confirmAdd === true,
+      confirmReplace: row.resolution === "replace" && row.confirmReplace === true,
+      satisfiedBy: row.satisfiedBy ?? null, supersededBy: row.supersededBy ?? null,
+      ownership: row.resolution === "keep" ? "project-owned" : "kit-managed",
+      acceptedProjectHash: null, decisionAcceptedAt: null,
+    });
+    changedEntries.push(entry);
+  }
+  // Partial tables may leave other paths unresolved; every supplied decision must
+  // satisfy the same rules used by complete apply, including engine-managed paths.
+  for (const warning of validateDecisions({ ...plan, files: changedEntries }, targetRoot, false)) console.warn(`[WARN] ${warning}`);
+  validatePlanStructure(plan, resolved, rootDir);
+  if (apply) {
+    const tempDir = fs.mkdtempSync(path.join(path.dirname(resolved), ".adoption-decisions-"));
+    try {
+      const nextPath = path.join(tempDir, "plan.json");
+      fs.writeFileSync(nextPath, `${JSON.stringify(plan, null, 2)}\n`, { encoding: "utf8", mode: fs.statSync(resolved).mode & 0o777 });
+      if (!fs.lstatSync(resolved).isFile() || fs.readFileSync(resolved, "utf8") !== original) throw new Error("Plan changed during decision editing; no decisions were saved.");
+      validatePlanStructure(plan, resolved, rootDir);
+      fs.renameSync(nextPath, resolved);
+    } finally { fs.rmSync(tempDir, { recursive: true, force: true }); }
+  }
+  return { applied: apply, changes, unresolved: plan.files.filter((entry) => ["unresolved", "manual-merge"].includes(entry.resolution)).map((entry) => entry.path) };
 }
 
 function validateDecisions(plan, targetRoot, safeOnly) {
@@ -370,6 +437,7 @@ function copyTargetForPreflight(sourceRoot, targetRoot) {
 export function acceptAdoptionManualMerge({ rootDir, planPath, relativePath, reason }) {
   const resolved = path.resolve(planPath);
   const plan = readJson(resolved);
+  if (plan.operation !== "adopt-existing") throw new Error("--accept-adoption-manual-merge requires operation adopt-existing. For state-upgrade use --accept-path-decision with --decision manual-merged; schema migration has no path decisions.");
   const entry = plan.files.find((candidate) => candidate.path === relativePath);
   if (!entry || entry.status !== "CONFLICT") throw new Error(`Path is not a CONFLICT: ${relativePath}`);
   const { targetRoot } = validatePlanStructure(plan, resolved, rootDir, false, relativePath);

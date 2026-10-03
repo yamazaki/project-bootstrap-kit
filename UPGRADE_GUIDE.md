@@ -17,6 +17,13 @@
 
 現時点で次回release向けの追加対応はない。
 
+## v0.11.0
+
+- development Modelへ `project-bootstrap-kit-upgrade` skillを追加。既存stateful adopterは新しいclean kitで `--scan` し、skillのADDと既存規範・phase-transition差分をreviewして適用する。独自編集skillを一括同期で上書きしない。
+- stateなし旧adopterはscan時に `--project-slug` を明示できる。stateありprojectのidentity変更には使わない。
+- pending adoption planの判断は `--set-adoption-decisions <plan> --decisions <json>` でpreviewし、`--apply`でplanだけを保存できる。判断語彙と例は[adoption guide](docs/guides/existing-project-adoption.md)を参照する。
+- manual mergeは1file編集→受入→次の順を維持する。旧planはkit commitが異なるため再scanし、既存編集と判断を保全して再確認する。完了後の確認scanもplan/bundleを生成する。[upgrade guide](docs/guides/upgrading.md)に経路・保管・順序を記載。
+
 ## v0.10.1
 
 公開回帰testの期待値だけを現行Project Model manifestへ合わせたPATCH releaseである。配布内容、初期化、upgradeの挙動は変わらないため、既存プロジェクト側の対応は不要。

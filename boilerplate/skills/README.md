@@ -4,6 +4,7 @@
 
 - `doc-governance`: 文書分類、命名、昇格、棚卸しを補助する。
 - `project-bootstrap`: 対話的な要求開発、技術・非機能要件の検討、PoC と初期実用提供の段階設計から WBS までを補助する。
+- `project-bootstrap-kit-upgrade`: project-bootstrap-kit適用済みprojectの更新、旧adopterのstate移行、利用者とAIによる判断・逐次統合を補助する。
 - `version-governance`: version 更新判断、更新対象、更新手順確認を補助する。
 - `phase-transition`: フェーズ終了、クローズ、次フェーズ計画、WBS 作成、見送り事項台帳化を補助する。
 - `capture-inbox`: 作業中の気づき、課題、疑問を `docs/WORK/inbox/` に捕捉する。
