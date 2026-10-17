@@ -4,6 +4,15 @@
 
 ### Distribution
 
+## v0.12.0 - 2026-10-17
+
+### Distribution
+
+- 旧stateに人向け名称を保存したprojectでも、schema 1から2への移行時に初期slugを明示して更新できるよう修正。schema 2の既存identity変更は引き続き拒否
+
+- captureに`learning`を追加し、作業中の知見記録とタスク・マイルストーン終了時の回収を明示
+- internal/export knowledge feedbackを`docs/project-bootstrap-kit-feedback/`へ集約し、既存ファイルの参照を保つ手動移行を案内
+
 ## v0.11.0 - 2026-10-03
 
 ### Distribution

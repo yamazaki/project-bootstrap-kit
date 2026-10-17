@@ -59,11 +59,13 @@ function modelMetadata(rootDir) {
   };
 }
 
-export function scanStateSchemaMigration({ rootDir, targetRoot, planOutput, projectName }) {
+export function scanStateSchemaMigration({ rootDir, targetRoot, planOutput, projectName, projectSlug: explicitSlug }) {
   const state = loadLegacyState(targetRoot, rootDir);
-  const projectSlug = state.project?.name ?? "";
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(projectSlug)) {
-    throw new Error(`Legacy project.name is not a valid lowercase kebab-case slug: ${projectSlug}`);
+  const legacyName = state.project?.name ?? "";
+  const projectSlug = explicitSlug !== undefined ? explicitSlug : legacyName;
+  if (typeof projectSlug !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(projectSlug)) {
+    if (explicitSlug !== undefined) throw new Error("Invalid project slug. Use lowercase kebab-case.");
+    throw new Error("Legacy project.name cannot be used as a lowercase kebab-case slug. Re-run --scan with --project-name and an explicit --project-slug for the schema 1 metadata migration; do not rewrite the legacy state.");
   }
   const productName = state.project?.productName;
   if (typeof productName !== "string" || !productName.trim()) throw new Error("Legacy state productName is missing.");
@@ -91,6 +93,8 @@ export function scanStateSchemaMigration({ rootDir, targetRoot, planOutput, proj
       projectNameSource: projectName ? "explicit-cli" : "legacy-product-name-candidate",
       projectNameConfirmed: Boolean(projectName),
       projectSlug,
+      projectSlugSource: explicitSlug !== undefined ? "explicit-cli" : "legacy-project-name",
+      previousProjectName: legacyName,
       productName,
       projectModel: modelMetadata(rootDir),
       contentFilesChanged: false,
@@ -130,6 +134,7 @@ export function applyStateSchemaMigration({ rootDir, planPath }) {
   if (plan.migration?.projectNameConfirmed !== true || plan.migration.projectNameSource !== "explicit-cli") {
     throw new Error("Project Name is not owner-confirmed. Re-run --scan with explicit --project-name.");
   }
+  if (typeof plan.migration.projectSlug !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(plan.migration.projectSlug)) throw new Error("Invalid project slug in state schema migration plan.");
   const targetRoot = path.resolve(plan.target);
   const currentState = readJson(path.join(targetRoot, STATE_RELATIVE_PATH));
   if (currentState.schemaVersion === 2) {
@@ -142,6 +147,7 @@ export function applyStateSchemaMigration({ rootDir, planPath }) {
     return { state: currentState, targetRoot, status: "skipped" };
   }
   const state = loadLegacyState(targetRoot, rootDir);
+  if (plan.migration.projectSlug !== state.project?.name && plan.migration.projectSlugSource !== "explicit-cli") throw new Error("A new schema 1 project slug must come from explicit --project-slug input.");
   if (state.integrity.digest !== plan.previousStateDigest) throw new Error("Bootstrap state changed after migration scan.");
   if (JSON.stringify(entryInfo(targetRoot, STATE_RELATIVE_PATH)) !== JSON.stringify(plan.evidence.state)) throw new Error("Bootstrap state evidence changed after migration scan.");
   if (JSON.stringify(entryInfo(targetRoot, ADOPTION_RELATIVE_PATH)) !== JSON.stringify(plan.evidence.adoption)) throw new Error("Bootstrap adoption evidence changed after migration scan.");
@@ -168,6 +174,7 @@ export function applyStateSchemaMigration({ rootDir, planPath }) {
     fromSchemaVersion: 1,
     toSchemaVersion: 2,
     projectNameSource: plan.migration.projectNameSource,
+    projectSlugSource: plan.migration.projectSlugSource ?? "legacy-project-name",
     kitVersion: plan.kit.version,
     kitCommit: plan.kit.commit,
   }];

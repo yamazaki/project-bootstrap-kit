@@ -16,7 +16,7 @@
       "name": "skills-sync",
       "contractVersion": 1,
       "introducedIn": "0.1.0",
-      "updatedIn": "0.9.0",
+      "updatedIn": "0.12.0",
       "dependsOn": [
         "skills-surface-migration"
       ],
@@ -51,7 +51,7 @@
       "name": "phase-transition",
       "contractVersion": 1,
       "introducedIn": "0.1.0",
-      "updatedIn": "0.5.0",
+      "updatedIn": "0.12.0",
       "dependsOn": [],
       "selection": "recommended",
       "supportedProjectModels": [
@@ -75,7 +75,7 @@
       "name": "capture-inbox",
       "contractVersion": 1,
       "introducedIn": "0.1.0",
-      "updatedIn": "0.2.0",
+      "updatedIn": "0.12.0",
       "dependsOn": [],
       "selection": "recommended",
       "supportedProjectModels": [
@@ -141,7 +141,7 @@
       "name": "technology-profiles",
       "contractVersion": 1,
       "introducedIn": "0.4.0",
-      "updatedIn": "0.5.0",
+      "updatedIn": "0.12.0",
       "dependsOn": [
         "phase-transition",
         "project-bootstrap-planning"

@@ -32,7 +32,7 @@ export const planDetails = [
   },
   {
     file: "docs/DEVELOPMENT_GUIDELINE.md",
-    summary: "Add guidance for capturing ideas, issues, and questions during work",
+    summary: "Add guidance for capturing ideas, issues, questions, and reusable lessons during work",
     locations: [
       "Add '作業中の気づきの捕捉' after phase transition process",
       "Clarify WBS milestone and phase transition triage timing",
@@ -56,6 +56,8 @@ export const planDetails = [
     ],
   },
 ];
+
+const INBOX_LEARNING = "`type` は `idea / issue / question / learning`。`learning` は実装・検証・運用や作業から得た知見で、分かったこと・成立条件・根拠への参照を短く残す。既存正本の本文は複製しない。作業中に記録し、タスク・マイルストーンの区切りで関連する `open / triaged` の扱いを判断する。";
 
 const INBOX_README = `# capture inbox
 
@@ -91,7 +93,7 @@ const DEVELOPMENT_SECTION = `### 3.6 作業中の気づきの捕捉
 
 \`capture inbox\` は、作業の本筋を止めずに気づきを失わないための一時保管場所である。捕捉した時点では、仕様変更、WBS 変更、実装変更として確定しない。
 
-捕捉する気づきの種別は、次の 3 種に限定する。
+捕捉する気づきの種別は、次の 4 種に限定する。
 
 - \`idea\`
   - 思いつき、改善案、将来やりたいこと
@@ -99,6 +101,8 @@ const DEVELOPMENT_SECTION = `### 3.6 作業中の気づきの捕捉
   - 課題、仕様変更候補、バグ、考慮漏れ、リスク
 - \`question\`
   - 疑問、確認事項、判断待ち
+- \`learning\`
+  - 実装・検証・運用から得た知見、成功・失敗の条件、再利用できる教訓
 
 棚卸しは、セッション終了ごとではなく、WBS マイルストーン切り替え時、WBS の大きな組み替え時、フェーズ終了と次フェーズ計画策定時に行う。ここでいう WBS マイルストーン切り替え時とは、例えば \`1.1\` の完了後に \`1.2\` を開始する前のような区切りであり、必要に応じて実施する。
 
@@ -140,7 +144,7 @@ docs/WORK/inbox/open/capture_20260531_1430_fqdn-design.md
 
 \`\`\`md
 ---
-type: idea | issue | question
+type: idea | issue | question | learning
 status: open | triaged | promoted | deferred | closed
 created_at: YYYY-MM-DD HH:mm
 source: session | implementation | review | test | user-feedback
@@ -150,7 +154,7 @@ priority: low | medium | high
 ---
 \`\`\`
 
-\`type\` は次の 3 種に限定する。
+\`type\` は次の 4 種に限定する。
 
 - \`idea\`
   - 思いつき、改善案、将来やりたいこと
@@ -158,6 +162,8 @@ priority: low | medium | high
   - 課題、仕様変更候補、バグ、考慮漏れ、リスク
 - \`question\`
   - 疑問、確認事項、判断待ち
+- \`learning\`
+  - 実装・検証・運用から得た知見、成功・失敗の条件、再利用できる教訓
 
 状態変更時は、フォルダ移動とメタデータの \`status\` 更新を同時に行う。
 
@@ -212,7 +218,7 @@ const AGENTS_SECTION = `### 4.6 capture inbox の運用
 
 実施すること:
 
-1. 内容を \`idea\`、\`issue\`、\`question\` のいずれかに分類する
+1. 内容を \`idea\`、\`issue\`、\`question\`、\`learning\` のいずれかに分類する
 2. \`docs/WORK/inbox/open/capture_yyyymmdd_hhmm_<slug>.md\` を作成する
 3. メタデータに \`type\`、\`status: open\`、\`created_at\`、\`source\`、\`related_wbs\`、\`related_docs\`、\`priority\` を記録する
 4. 本文に、気づき、背景、影響しそうな範囲、次に判断することを書く
@@ -228,6 +234,37 @@ const AGENTS_SKILL_ENTRY = `- \`skills/capture-inbox/\`
   - 作業中の気づき、課題、疑問を \`docs/WORK/inbox/\` に捕捉する`;
 
 const SKILL_README_ENTRY = "- `capture-inbox`: 作業中の気づき、課題、疑問を `docs/WORK/inbox/` に捕捉する。";
+
+const LEARNING_POLICY = `作業中にAIが再利用価値のある知見を得た場合は、\`learning\` として \`docs/WORK/inbox/open/\` へ短く記録する。分かったこと、成立条件、根拠への参照を残し、事実と仮説を区別する。既存の正本文書があれば本文を複製しない。改善提案は \`idea\`、未解決の問題は \`issue\`、未確認事項は \`question\` と使い分ける。
+
+マイルストーン・タスクのクローズ時は関連する \`open / triaged\` を確認し、プロジェクト内の知識、kitへのfeedback候補、保留、対応不要の扱いを判断する。昇格時は \`promoted\` と参照先を残し、保留は理由・再検討条件を記録する。フェーズ終了時は従来どおり全件を棚卸しする。captureしただけで仕様・実装を変更したり、kitへ送信したりしない。`;
+const LEARNING_MARKER = "作業中にAIが再利用価値のある知見を得た場合";
+
+// Patch only the capture section; preserve adopter-specific text elsewhere.
+function upgradeLearningSection(content, heading) {
+  const start = content.indexOf(heading);
+  if (start < 0) return content;
+  const tail = content.slice(start + heading.length);
+  const newline = tail.startsWith("\r\n") ? "\r\n" : "\n";
+  if (!tail.startsWith(newline)) return content;
+  const afterHeading = start + heading.length + newline.length;
+  const rest = content.slice(afterHeading);
+  const endMatch = rest.match(/^#{1,3} /m);
+  const end = endMatch ? afterHeading + endMatch.index : content.length;
+  let section = content.slice(start, end)
+    .replaceAll("\r\n", "\n")
+    .replaceAll("次の 3 種", "次の 4 種")
+    .replaceAll("type: idea | issue | question\n", "type: idea | issue | question | learning\n")
+    .replaceAll("内容を `idea`、`issue`、`question` のいずれか", "内容を `idea`、`issue`、`question`、`learning` のいずれか");
+  const question = "- `question`\n  - 疑問、確認事項、判断待ち";
+  if (!section.includes("- `learning`") && section.includes(question)) {
+    section = section.replace(question, `${question}\n- \`learning\`\n  - 実装・検証・運用から得た知見、成功・失敗の条件、再利用できる教訓`);
+  }
+  if (!section.includes(LEARNING_MARKER)) {
+    section = section.replace(`${heading}\n`, `${heading}\n\n${LEARNING_POLICY}\n`);
+  }
+  return content.slice(0, start) + section.replaceAll("\n", newline) + content.slice(end);
+}
 
 function readIfExists(targetPath) {
   return fs.existsSync(targetPath) ? fs.readFileSync(targetPath, "utf8") : "";
@@ -303,6 +340,7 @@ function patchDevelopmentGuideline(targetPath) {
       "棚卸しは、セッション終了ごとではなく、WBS マイルストーン切り替え時、WBS の大きな組み替え時、フェーズ終了と次フェーズ計画策定時に行う。ここでいう WBS マイルストーン切り替え時とは、例えば `1.1` の完了後に `1.2` を開始する前のような区切りであり、必要に応じて実施する。"
     );
   }
+  content = upgradeLearningSection(content, "### 3.6 作業中の気づきの捕捉");
   return writeIfChanged(targetPath, original, content);
 }
 
@@ -351,6 +389,7 @@ function patchDocumentation(targetPath) {
       content = `${content.trimEnd()}\n\n${DOCUMENTATION_SKILL_ENTRY}\n`;
     }
   }
+  content = upgradeLearningSection(content, "### 4.5 capture inbox の扱い");
   return writeIfChanged(targetPath, original, content);
 }
 
@@ -418,6 +457,7 @@ function patchAgents(targetPath) {
       content = `${content.trimEnd()}\n\n${AGENTS_SKILL_ENTRY}\n`;
     }
   }
+  content = upgradeLearningSection(content, "### 4.6 capture inbox の運用");
   return writeIfChanged(targetPath, original, content);
 }
 
@@ -450,7 +490,10 @@ function ensureInboxDirs(targetRoot) {
   const readmePath = path.join(inboxRoot, "README.md");
   if (!fs.existsSync(readmePath)) {
     ensureDir(path.dirname(readmePath));
-    fs.writeFileSync(readmePath, INBOX_README, "utf8");
+    fs.writeFileSync(readmePath, `${INBOX_README.trimEnd()}\n\n${INBOX_LEARNING}\n`, "utf8");
+    changed.push("docs/WORK/inbox/README.md");
+  } else if (!readIfExists(readmePath).includes("`learning`")) {
+    fs.appendFileSync(readmePath, `\n${INBOX_LEARNING}\n`, "utf8");
     changed.push("docs/WORK/inbox/README.md");
   }
   return changed;
@@ -464,7 +507,7 @@ function getInboxStatuses(ctx) {
     label: "docs/WORK/inbox/README.md",
     status: !fs.existsSync(readmePath)
       ? "ADD"
-      : containsComparableText(readIfExists(readmePath), "状態はファイル名ではなく、配置フォルダと frontmatter の status で管理する")
+      : containsComparableText(readIfExists(readmePath), "状態はファイル名ではなく、配置フォルダと frontmatter の status で管理する") && readIfExists(readmePath).includes("`learning`")
         ? "SKIP(SAME)"
         : "UPDATE",
   });
@@ -516,6 +559,7 @@ function getStatus(ctx) {
   results.push({
     label: "AGENTS.md",
     status:
+      containsComparableText(agentsContent, LEARNING_MARKER) &&
       containsComparableText(agentsContent, "### 4.6 capture inbox の運用") &&
       containsComparableText(agentsContent, "skills/capture-inbox") &&
       (!agentsHasPhaseTransition || containsComparableText(agentsContent, "`docs/WORK/inbox/` の棚卸し"))
@@ -527,6 +571,7 @@ function getStatus(ctx) {
   results.push({
     label: "docs/DEVELOPMENT_GUIDELINE.md",
     status:
+      containsComparableText(developmentContent, LEARNING_MARKER) &&
       containsComparableText(developmentContent, "### 3.6 作業中の気づきの捕捉") &&
       (!developmentHasPhaseTransition || containsComparableText(developmentContent, "docs/WORK/inbox/ の open を確認")) &&
       containsComparableText(developmentContent, "ここでいう WBS マイルストーン切り替え時とは")
@@ -538,6 +583,7 @@ function getStatus(ctx) {
   results.push({
     label: "docs/DOCUMENTATION.md",
     status:
+      containsComparableText(documentationContent, LEARNING_MARKER) &&
       containsComparableText(documentationContent, "### 4.5 capture inbox の扱い") &&
       containsComparableText(documentationContent, "`WORK/inbox/`") &&
       (!documentationHasPhaseDocs || containsComparableText(documentationContent, "capture inbox 棚卸し結果")) &&

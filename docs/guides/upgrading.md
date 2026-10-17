@@ -24,7 +24,7 @@ node scripts/upgrade-project.mjs \
   --plan-output /tmp/legacy-migration/plan.json
 ```
 
-slug指定はstateなし経路だけで、lowercase kebab-caseを使う。未指定時は従来どおり適用記録のProject Nameを推定値にする。stateあり経路では指定を拒否し、identity変更を別migrationとして扱う。過去適用記録の名称をscanのためだけに書き換える必要はない。
+slug指定はstateなし経路とschema 1 -> 2のmetadata移行で使用でき、lowercase kebab-caseを使う。stateなし経路で未指定時は従来どおり適用記録のProject Nameを推定値にする。schema 2の既存identity変更は拒否し、別migrationとして扱う。過去適用記録の名称をscanのためだけに書き換える必要はない。
 
 CONFLICTはtargetのGit履歴、確認済みkit適用commit時点の内容、現在内容、plan bundleのsnapshotを比較する。未カスタマイズならreplace候補、project固有の正本ならkeep候補、kitの新規則も必要なら統合候補となる。ただしsquash・rename・浅い履歴・未commit編集・適用commitへ独自編集が同居する場合があるため、履歴だけでreplaceを承認しない。差分の目視確認を伴わせ、旧upstreamを推測復元しない。
 
@@ -65,6 +65,8 @@ node scripts/upgrade-project.mjs \
   --project-name "Confirmed Project Name" \
   --plan-output /tmp/state-schema-migration/plan.json
 ```
+
+旧stateの`project.name`が大文字・空白を含む人向け名称の場合は、その値を直接変更せず、上記scanへ`--project-slug confirmed-project`も明示する。自動的な小文字化・推定は行わない。planに表示される旧name、人向け名称、初期slugを確認してからapplyする。既に有効なslugであれば未指定で引き継げる。schema 2へ移行した後のslug変更はこの引数では受け付けない。
 
 migrationは通常contentを書き換えず、stateとadoption metadataへname、slug、product、development Model identityを追加する。
 

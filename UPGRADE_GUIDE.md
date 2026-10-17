@@ -17,6 +17,21 @@
 
 現時点で次回release向けの追加対応はない。
 
+## v0.12.0
+
+### schema 1に人向け名称を保存した既存project
+
+- schema 1 -> 2のscanで旧`project.name`がslugとして拒否される場合は、`--project-name "確認済み名称" --project-slug confirmed-project`を明示する。初期slugはplanで確認してからmetadata-only migrationをapplyする。旧stateの名称やintegrityを手で変更しない。schema 2へ移行後のslug変更は引き続き拒否する。
+
+### 知見captureとfeedback保存先
+
+- captureの`type`へ`learning`を追加。既存captureを一括変換する必要はない。作業中に知見・条件・根拠を短く残し、タスク・マイルストーンのクローズ時に関連する`open / triaged`を回収する。
+- internal/export knowledge feedbackの新規保存先を、時期・作業線によらず`docs/project-bootstrap-kit-feedback/`へ統一。directoryは初回作成時に用意する。
+- stateful adopterは通常のstate scanでAGENTS、DEVELOPMENT_GUIDELINE、DOCUMENTATION、capture inbox README、capture-inbox / knowledge-feedback / phase-transition skillの差分をreviewする。独自編集は3-wayまたはmanual mergeで保持する。
+- stateなし旧adopterは`node scripts/upgrade-project.mjs --target <project> --feature capture-inbox --ai-surface <surface> --dry-run --diff`と、同じ引数で`--feature technology-profiles`を指定したpreviewで差分を確認する。後者は広範な文書・skill更新を含むため、無関係な差分がある場合は上記対象だけを手動で統合する。`phase-transition`のfeedback保存先・capture棚卸し手順もreviewする。独自編集skillは一括上書きしない。
+- 過去のfeedbackは自動移動しない。移動前に旧path、移動先、参照元、内容を一覧化し、同名ファイルは内容を確認して統合またはslugで区別する。固定directoryへ移動後、internal版内のexport参照・Evidence Mapの相対参照・索引・作業文書のリンクを更新し、参照切れと旧path残存を確認する。監査等で移動できない文書は旧pathを維持し、理由と新保存先を索引に残す。
+- rollbackは移動前一覧とGit等の退避点からファイルと参照を戻す。kit側の受領先は変更しない。匿名化・ユーザー確認・final検査は引き続き必須。
+
 ## v0.11.0
 
 - development Modelへ `project-bootstrap-kit-upgrade` skillを追加。既存stateful adopterは新しいclean kitで `--scan` し、skillのADDと既存規範・phase-transition差分をreviewして適用する。独自編集skillを一括同期で上書きしない。

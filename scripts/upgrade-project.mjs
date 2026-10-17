@@ -63,7 +63,7 @@ Options:
   --ai-surface <value>           codex | claude | rovo | both
   --technology-profile <id>      Repeatable technology profile selector
   --project-name <name>          Override legacy adoption project name inference
-  --project-slug <slug>          Override legacy slug inference (no bootstrap state only)
+  --project-slug <slug>          Set legacy slug (no state or schema 1 migration only)
   --product-name <name>          Override legacy adoption product name inference
   --dry-run                      Preview only
   --apply                        Apply the feature

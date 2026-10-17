@@ -19,7 +19,7 @@
 - `sessions/`: 判断、作業履歴、未決事項、再開地点
 - `docs/ADR/`: 継続的に影響する判断
 - `docs/REF/`: 再利用可能な参照資料
-- `docs/WORK/inbox/`: 未昇格のidea、issue、question
+- `docs/WORK/inbox/`: 未昇格のidea、issue、question、learning
 
 Evidenceと適用範囲を確認せず、outputやsession記録を恒久情報へ昇格しない。
 

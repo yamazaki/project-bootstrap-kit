@@ -205,7 +205,7 @@ Project sectionへ次を追加する。
 State schema 1 / Modelなしadopter:
 
 1. State / adoption / baseline integrity確認
-2. 旧project.nameをslug候補
+2. 旧project.nameが有効なlowercase kebab-caseの場合だけslugとして引き継ぐ。それ以外は`--project-slug`で初期slugを明示し、metadata-only planで確認する
 3. 旧productNameをproduct name候補
 4. 人向けproject nameはproduct nameを初期候補として利用者review
 5. generated pathsをdevelopment manifestと照合

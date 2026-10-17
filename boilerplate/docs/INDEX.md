@@ -13,6 +13,7 @@
 - 仕様: [SPEC](./SPEC/)
 - 意思決定: [ADR](./ADR/)
 - 参照資料: [REF](./REF/)
+- kitへのフィードバック保存先: [knowledge feedback](./DOCUMENTATION.md#101-knowledge-feedback)（`docs/project-bootstrap-kit-feedback/`、初回作成時に用意）
 - 作業文書: [WORK](./WORK/)
   - Maintenance: [WORK/maintenance](./WORK/maintenance/)
   - Operations: [WORK/operations](./WORK/operations/)

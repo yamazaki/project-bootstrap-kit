@@ -24,3 +24,5 @@ capture_yyyymmdd_hhmm_<slug>.md
 ```
 
 状態はファイル名ではなく、配置フォルダと frontmatter の `status` で管理する。
+
+`type` は `idea / issue / question / learning`。`learning` は実装・検証・運用や作業から得た知見で、分かったこと・成立条件・根拠への参照を短く残す。既存正本の本文は複製しない。作業中に記録し、タスク・マイルストーンの区切りで関連する `open / triaged` の扱いを判断する。

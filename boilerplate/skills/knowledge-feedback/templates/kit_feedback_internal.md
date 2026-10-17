@@ -4,7 +4,8 @@
 - Status: Internal Draft
 - Feedback ID: <neutral-id>
 - Source Project: <local project or repository>
-- Source Phase / Milestone: <x.y>
+- Source Phase / Milestone: <phase / milestone / task / work-line or none>
+- Related Captures: <project-local paths or none>
 - Created At: <YYYY-MM-DD>
 - Related Technology Profiles: <profile ids or none>
 - Evidence Level: production-validated | e2e-validated | implementation-validated | hypothesis

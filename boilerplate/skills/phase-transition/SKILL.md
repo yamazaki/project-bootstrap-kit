@@ -31,6 +31,7 @@ description: Use when closing a project phase, checking phase completion, archiv
    - `retain-in-work`
    - `delete`
    - Technology Profileの採否、例外、一次検証、後続検討を棚卸しする
+   - capture inboxの全件を確認し、`learning`を含む知見の昇格先・保留理由を記録する
 4. 次フェーズ計画
    - 完了済み `PLAN_PHASE_CURRENT.md` を `docs/history/PLAN_PHASE_<phase>_<yyyymmdd>.md` へ退避する
    - `docs/ROADMAP.md` の完了フェーズ、現在フェーズ、将来フェーズを更新する
@@ -44,7 +45,7 @@ description: Use when closing a project phase, checking phase completion, archiv
    - 各項目に、送り先、再検討タイミング、再検討観点、根拠文書を持たせる
 7. project-bootstrap-kitへのknowledge feedback
    - 他プロジェクトにも通用する成功、失敗、分岐条件、運用知識を抽出する
-   - `knowledge-feedback` skillを使い、必要な場合はinternal版を作成する
+   - `docs/project-bootstrap-kit-feedback/` の既存feedbackと照合し、`knowledge-feedback` skillを使い、必要な場合は同directoryにinternal版を作成する
    - kitへ渡す場合は匿名化済みexport版を別に作り、検査とユーザー確認を通す
    - internal版を移送せず、他リポジトリへ自動送信しない
 8. 完了フェーズのsession archive

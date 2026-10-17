@@ -52,6 +52,7 @@ docs/
 ├── SPEC/
 ├── ADR/
 ├── REF/
+├── project-bootstrap-kit-feedback/  # feedback初回作成時に用意。internal/export共通
 ├── WORK_LINE_ROUTING.md
 ├── WORK/
 │   ├── 0.1/
@@ -177,6 +178,10 @@ UI 文書は次の 3 層で扱う。
 
 ### 4.5 capture inbox の扱い
 
+作業中にAIが再利用価値のある知見を得た場合は、`learning` として `docs/WORK/inbox/open/` へ短く記録する。分かったこと、成立条件、根拠への参照を残し、事実と仮説を区別する。既存の正本文書があれば本文を複製しない。改善提案は `idea`、未解決の問題は `issue`、未確認事項は `question` と使い分ける。
+
+マイルストーン・タスクのクローズ時は関連する `open / triaged` を確認し、プロジェクト内の知識、kitへのfeedback候補、保留、対応不要の扱いを判断する。昇格時は `promoted` と参照先を残し、保留は理由・再検討条件を記録する。フェーズ終了時は従来どおり全件を棚卸しする。captureしただけで仕様・実装を変更したり、kitへ送信したりしない。
+
 作業中に発見した思いつき、機能追加候補、仕様変更候補、バグ、考慮漏れ、疑問は、すぐに `SPEC / ADR / REF / PLAN` へ反映せず、必要に応じて `docs/WORK/inbox/` に捕捉する。
 
 `capture inbox` は、作業の本筋を止めずに気づきを失わないための一時保管場所である。正式な仕様、計画、参照資産ではない。
@@ -208,7 +213,7 @@ docs/WORK/inbox/open/capture_20260531_1430_fqdn-design.md
 
 ```md
 ---
-type: idea | issue | question
+type: idea | issue | question | learning
 status: open | triaged | promoted | deferred | closed
 created_at: YYYY-MM-DD HH:mm
 source: session | implementation | review | test | user-feedback
@@ -218,7 +223,7 @@ priority: low | medium | high
 ---
 ```
 
-`type` は次の 3 種に限定する。
+`type` は次の 4 種に限定する。
 
 - `idea`
   - 思いつき、改善案、将来やりたいこと
@@ -226,6 +231,8 @@ priority: low | medium | high
   - 課題、仕様変更候補、バグ、考慮漏れ、リスク
 - `question`
   - 疑問、確認事項、判断待ち
+- `learning`
+  - 実装・検証・運用から得た知見、成功・失敗の条件、再利用できる教訓
 
 状態変更時は、フォルダ移動とメタデータの `status` 更新を同時に行う。
 
@@ -379,7 +386,7 @@ REF_<type>_<subject>.md
 
 ### 6.6 WBSマイルストーンでのknowledge feedback
 
-WBSマイルストーンのクローズ時は、`docs/TECHNOLOGY/ADOPTION.md` と当該マイルストーンの成果物を確認し、他プロジェクトでも有効な知識がある場合だけfeedbackを作成する。毎セッションでの作成は必須にしない。
+WBSマイルストーンのクローズ時は、関連するcapture（`learning`を含む `open / triaged`）、`docs/TECHNOLOGY/ADOPTION.md` と当該マイルストーンの成果物を確認し、他プロジェクトでも有効な知識がある場合だけfeedbackを作成する。毎セッションでの作成は必須にしない。
 
 ## 7. 新規プロジェクト開始時の文書運用
 
@@ -560,11 +567,15 @@ Epicでは `docs/agent_sessions/session_yyyymmdd_nn.md` に、最低限次を記
 
 ### 10.1 knowledge feedback
 
+作成時期、フェーズ、マイルストーン、作業線によらず、internal版・export版は同じ `docs/project-bootstrap-kit-feedback/` に保存する。初回作成時にdirectoryを用意し、`WORK/x.y/` へは新規作成しない。出どころのタスク、関連capture、根拠文書はinternal版に記録する。export版にはsource側の識別情報を含めない。同日・同名の場合はslugを変え、既存ファイルを上書きしない。kit側が受領するfeedbackの受付先とは別の役割である。
+
+既存のfeedbackは移動前に一覧とrepository内の参照を確認し、同名衝突を解消してから移し、internal版などの相対参照と索引を更新する。監査上変更できない過去文書は旧pathに残して理由と新しい保存先を索引に記録する。upgradeは過去のfeedbackを自動移動しない。
+
 他プロジェクトにも通用する知識は、次の場所へ自己完結したfeedbackとして記録する。
 
 ```text
-docs/WORK/<phase>.<milestone>/kit_feedback_internal_yyyymmdd_<slug>.md
-docs/WORK/<phase>.<milestone>/kit_feedback_export_yyyymmdd_<neutral-slug>.md
+docs/project-bootstrap-kit-feedback/kit_feedback_internal_yyyymmdd_<slug>.md
+docs/project-bootstrap-kit-feedback/kit_feedback_export_yyyymmdd_<neutral-slug>.md
 ```
 
 - internal版は元プロジェクト内だけに保管し、Evidence IDと元文書パスの対応を持ってよい

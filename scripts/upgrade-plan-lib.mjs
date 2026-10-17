@@ -78,11 +78,11 @@ export function scanUpgradeTarget({ rootDir, targetRoot, planOutput, aiSurface, 
     });
   }
   const rawState = readJson(path.join(normalizedTarget, STATE_RELATIVE_PATH));
-  if (projectSlug !== undefined) throw new Error("--project-slug is only supported for legacy adopters without bootstrap state; changing an existing state identity requires a separate migration.");
   if (rawState.schemaVersion === 1) {
     console.log("Bootstrap state schema 1 detected; creating a metadata-only schema migration plan.");
-    return scanStateSchemaMigration({ rootDir, targetRoot: normalizedTarget, planOutput, projectName });
+    return scanStateSchemaMigration({ rootDir, targetRoot: normalizedTarget, planOutput, projectName, projectSlug });
   }
+  if (projectSlug !== undefined) throw new Error("--project-slug is only supported for legacy adopters without bootstrap state or schema 1 metadata migration; changing a schema 2 identity requires a separate migration.");
   return scanStateUpgrade({ rootDir, targetRoot: normalizedTarget, planOutput });
 }
 

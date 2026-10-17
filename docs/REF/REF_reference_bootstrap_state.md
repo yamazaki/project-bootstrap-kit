@@ -45,7 +45,7 @@ node scripts/verify-project-init.mjs \
 
 ## State upgrade commands
 
-stateがない旧adopterでも同じscan commandを使用する。upgrade scriptはadoption記録からmetadataを復元し、state migration planを生成する。不足または変更がある場合は`--project-name`、`--project-slug`、`--product-name`、`--ai-surface`、`--technology-profile`を明示する。slug指定はstateなしの旧adopterだけで受け付ける。
+stateがない旧adopterでも同じscan commandを使用する。upgrade scriptはadoption記録からmetadataを復元し、state migration planを生成する。不足または変更がある場合は`--project-name`、`--project-slug`、`--product-name`、`--ai-surface`、`--technology-profile`を明示する。slug指定はstateなしの旧adopterとschema 1 -> 2のmetadata移行で受け付ける。schema 2の既存identity変更には使わない。
 
 ```bash
 node scripts/upgrade-project.mjs \
@@ -78,6 +78,8 @@ node scripts/upgrade-project.mjs \
 node scripts/upgrade-project.mjs \
   --apply-plan /path/to/state-schema-migration-plan.json
 ```
+
+旧nameがCamelCase等の人向け名称でslugとして無効な場合は`--project-slug confirmed-project`も明示して再scanし、plan上の旧name・新name・初期slugを確認する。旧stateを書き換えたり、slugを自動推定したりしない。既存の有効なslugは省略時に保持する。
 
 applyはstate schema、Project Model identity、adoption metadataを更新し、通常contentを変更しない。scan後のstate/adoption変更、plan改変、kit HEAD差異はstaleとして拒否する。同じplanの再applyは一致時だけ`SKIP(SAME)`となる。
 

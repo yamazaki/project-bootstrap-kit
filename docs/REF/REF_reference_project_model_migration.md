@@ -23,7 +23,7 @@ scan
 
 Legacy metadata:
 
-- old project.name: slug候補
+- old project.name: 有効なlowercase kebab-caseの場合だけslugとして引き継ぐ。人向け名称であれば`--project-slug`で初期slugを明示し、planで確認する
 - old productName: product name候補
 
 新project nameは一意に推測できない。product nameを初期候補としてplanへ表示し、利用者が確認・修正する。

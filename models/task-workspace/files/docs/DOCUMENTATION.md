@@ -7,7 +7,7 @@
 - Session判断・再開情報: `sessions/`と`SESSION_HANDOFF.md`
 - 継続的な判断: `docs/ADR/`
 - 再利用可能な参照: `docs/REF/`
-- 未整理のidea・issue: `docs/WORK/inbox/`
+- 未整理のidea・issue・question・learning: `docs/WORK/inbox/`
 
 ## 2. 昇格
 

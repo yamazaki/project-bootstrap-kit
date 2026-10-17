@@ -1,6 +1,6 @@
 {
   "name": "capture-inbox",
-  "description": "Add capture inbox folders, guidance, and skill support for recording ideas, issues, and questions without immediately changing specs or plans.",
+  "description": "Add capture inbox folders, guidance, and skill support for recording ideas, issues, questions, and reusable lessons without immediately changing specs or plans.",
   "mode": "semi-automatic",
   "adds": [
     "docs/WORK/inbox/",
@@ -14,7 +14,7 @@
     "docs/BOOTSTRAP_ADOPTION.md"
   ],
   "notes": [
-    "Use this when a project needs a lightweight inbox for ideas, issues, missed considerations, and questions.",
+    "Use this when a project needs a lightweight inbox for ideas, issues, missed considerations, questions, and lessons.",
     "Pass --ai-surface to add the capture-inbox skill to the selected AI surface.",
     "This feature does not triage existing notes automatically."
   ]

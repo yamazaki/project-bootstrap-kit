@@ -21,7 +21,7 @@ kit version/commitとclean状態、適用先のGit差分・rollback点・適用�
 node scripts/upgrade-project.mjs --target /path/to/project --scan --plan-output /tmp/project-bootstrap-update/plan.json
 ```
 
-stateなしの旧adopterで改名している場合だけ、scanへ `--project-name "現在の名称" --project-slug current-project` を追加する。slugはlowercase kebab-case。stateありprojectのidentityをこの引数で改名しない。planとbundleはsnapshotやproject内容を含み得るため、保管先と共有範囲を確認する。
+stateなしの旧adopterで改名している場合は、scanへ `--project-name "現在の名称" --project-slug current-project` を追加する。schema 1 -> 2移行でも、旧nameが人向け名称でslugに使えない場合は同じ引数で初期slugを明示し、planで確認する。slugはlowercase kebab-case。schema 2の既存identityはこの引数で改名できない。planとbundleはsnapshotやproject内容を含み得るため、保管先と共有範囲を確認する。
 
 ## 経路判別
 
@@ -31,7 +31,7 @@ stateなしの旧adopterで改名している場合だけ、scanへ `--project-n
 | --- | --- | --- |
 | adopt-existing | legacy migration。判断表と `--accept-adoption-manual-merge` | `--apply-plan`、safe-only可 |
 | state-upgrade | `--accept-path-decision` | `--apply-plan`、safe-only不可 |
-| bootstrap-state-schema-migration | 名称を確認し `--project-name` 指定で再scan | `--apply-plan`、metadataのみ |
+| bootstrap-state-schema-migration | 名称を確認し `--project-name`、旧nameがslugに使えなければ `--project-slug` も指定して再scan | `--apply-plan`、metadataのみ |
 
 schema migration適用後は再scanし、次のoperationを読み直す。
 

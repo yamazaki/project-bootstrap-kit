@@ -131,7 +131,7 @@
 
 - 作業中の思いつき、課題、疑問を `docs/WORK/inbox/` に捕捉する運用を導入する
 - `open / triaged / promoted / deferred / closed` の状態別フォルダを追加する
-- `idea / issue / question` の 3 種で capture を分類する
+- `idea / issue / question / learning` の 4 種で capture を分類する
 - 棚卸しを WBS マイルストーン切り替え時、WBS 組み替え時、フェーズ移行時に行うルールを追加する
 - `capture-inbox` skill を追加する
 

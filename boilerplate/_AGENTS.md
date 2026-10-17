@@ -277,17 +277,21 @@ MNT / OPS / ADVでは各件別記録に次アクションと途中状態を追�
 
 見送り事項は、後続フェーズ計画時に忘れず再検討できるよう、再検討タイミング、再検討観点、根拠文書を持つ台帳として残す。
 
-knowledge feedbackをkitへ渡す場合は、project内参照を持つinternal版と匿名化済みexport版を分離する。source evidenceとKit Target Mapを別sectionにし、kit target、semantic change、再現手順、受入条件を残す。internal版を他リポジトリへ移送せず、`pre-review`検査、ユーザー確認、`final`検査を通過したexport版だけを受け渡す。
+knowledge feedbackのinternal版・export版は、時期や作業線を問わず `docs/project-bootstrap-kit-feedback/` に保存する。初回作成時にdirectoryを用意する。knowledge feedbackをkitへ渡す場合は、project内参照を持つinternal版と匿名化済みexport版を分離する。source evidenceとKit Target Mapを別sectionにし、kit target、semantic change、再現手順、受入条件を残す。internal版を他リポジトリへ移送せず、`pre-review`検査、ユーザー確認、`final`検査を通過したexport版だけを受け渡す。
 
 session archiveではsession rootを固定しない。mature adopterのmappingを尊重し、移動前にrepository内の参照を確認する。現行フェーズ、フェーズ間作業、最新resume promptはactive rootへ残す。immutable referenceまたは監査要件で移動できない場合は、適用除外理由と代替索引を記録する。
 
 ### 4.6 capture inbox の運用
 
+作業中にAIが再利用価値のある知見を得た場合は、`learning` として `docs/WORK/inbox/open/` へ短く記録する。分かったこと、成立条件、根拠への参照を残し、事実と仮説を区別する。既存の正本文書があれば本文を複製しない。改善提案は `idea`、未解決の問題は `issue`、未確認事項は `question` と使い分ける。
+
+マイルストーン・タスクのクローズ時は関連する `open / triaged` を確認し、プロジェクト内の知識、kitへのfeedback候補、保留、対応不要の扱いを判断する。昇格時は `promoted` と参照先を残し、保留は理由・再検討条件を記録する。フェーズ終了時は従来どおり全件を棚卸しする。captureしただけで仕様・実装を変更したり、kitへ送信したりしない。
+
 ユーザーが `/capture-inbox`、または同等の表現で作業中の気づきを記録したいと指示した場合、AI エージェントは `docs/DOCUMENTATION.md` の capture inbox ルールに従う。
 
 実施すること:
 
-1. 内容を `idea`、`issue`、`question` のいずれかに分類する
+1. 内容を `idea`、`issue`、`question`、`learning` のいずれかに分類する
 2. `docs/WORK/inbox/open/capture_yyyymmdd_hhmm_<slug>.md` を作成する
 3. メタデータに `type`、`status: open`、`created_at`、`source`、`related_wbs`、`related_docs`、`priority` を記録する
 4. 本文に、気づき、背景、影響しそうな範囲、次に判断することを書く

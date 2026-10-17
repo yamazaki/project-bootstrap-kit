@@ -118,9 +118,11 @@ WBSマイルストーンまたはフェーズのクローズ時に `knowledge-fe
 `knowledge-feedback` はTechnology Profile専用ではなく、文書運用、WORK/0.1、WBS、セッション、Runbook、versioning、skill、scriptなどkit全体の改善を対象とする。
 
 ```text
-docs/WORK/<phase>.<milestone>/kit_feedback_internal_yyyymmdd_<slug>.md
-docs/WORK/<phase>.<milestone>/kit_feedback_export_yyyymmdd_<neutral-slug>.md
+docs/project-bootstrap-kit-feedback/kit_feedback_internal_yyyymmdd_<slug>.md
+docs/project-bootstrap-kit-feedback/kit_feedback_export_yyyymmdd_<neutral-slug>.md
 ```
+
+作成時期・作業線によらず同じdirectoryへ保存し、初回作成時にdirectoryを用意する。旧pathからの移行は一覧・参照・同名衝突を確認して手動で行い、upgradeでは自動移動しない。
 
 internal版は元プロジェクト内に留める。export版では元文書パスと固有名詞をEvidence IDと匿名化した根拠概要へ置き換え、利用プロジェクト側の機械検査とユーザー確認を通す。利用プロジェクトからkitへ自動書き込み、commit、pushは行わない。
 

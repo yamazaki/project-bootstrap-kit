@@ -32,14 +32,20 @@ Technology Profileは対象の一部であり、本skillはprofile専用では�
 - 文書分類、昇格、セッション、WBS、完了判定の改善
 - bootstrap、verify、upgrade、versioningの不足や再発しやすい問題
 
+## 保存先
+
+作成時期、フェーズ、マイルストーン、作業線によらず、internal版・export版は同じ `docs/project-bootstrap-kit-feedback/` に保存する。初回作成時にdirectoryを用意し、`WORK/x.y/` へは新規作成しない。出どころのタスク、関連capture、根拠文書はinternal版に記録する。export版にはsource側の識別情報を含めない。同日・同名の場合はslugを変え、既存ファイルを上書きしない。kit側が受領するfeedbackの受付先とは別の役割である。
+
+既存のfeedbackは移動前に一覧とrepository内の参照を確認し、同名衝突を解消してから移し、internal版などの相対参照と索引を更新する。監査上変更できない過去文書は旧pathに残して理由と新しい保存先を索引に記録する。upgradeは過去のfeedbackを自動移動しない。
+
 ## 標準手順
 
-1. 対象マイルストーンまたはフェーズの成果物、ADR、Runbook、session、capture inbox、ガイドラインを確認する
+1. 対象作業の成果物、ADR、Runbook、session、関連capture（`learning`を含む `open / triaged`）、ガイドライン、および固定directory内の既存feedbackを確認する。重複する提案は統合・参照し、再作成しない
 2. 関係する場合は `docs/TECHNOLOGY/ADOPTION.md` の採用、不採用、後続検討、一次検証を確認する
 3. プロジェクト固有事情を除いても成立する知識を抽出する
 4. 前提、適用条件、反例、証拠レベル、確認日を記録する
-5. プロジェクト内だけで使う `kit_feedback_internal_yyyymmdd_<slug>.md` を作成する
-6. internal版から、source側の参照パスと固有名詞を除き、kit targetと再現性情報を保持した `kit_feedback_export_yyyymmdd_<neutral-slug>.md` を作成する
+5. `docs/project-bootstrap-kit-feedback/` を用意し、プロジェクト内だけで使う `kit_feedback_internal_yyyymmdd_<slug>.md` を作成する
+6. 同じdirectoryに、internal版から、source側の参照パスと固有名詞を除き、kit targetと再現性情報を保持した `kit_feedback_export_yyyymmdd_<neutral-slug>.md` を作成する
 7. `scripts/verify-feedback-export.mjs --mode pre-review` でexport版の匿名化と再現性を検査する
 8. ユーザーがexport版だけを確認する
 9. `scripts/verify-feedback-export.mjs --mode final` でユーザー確認済みを含む最終検査を行う
@@ -78,7 +84,7 @@ Technology Profileは対象の一部であり、本skillはprofile専用では�
 
 ```bash
 node <skill-dir>/scripts/verify-feedback-export.mjs --mode pre-review \
-  docs/WORK/<phase>.<milestone>/kit_feedback_export_yyyymmdd_<neutral-slug>.md
+  docs/project-bootstrap-kit-feedback/kit_feedback_export_yyyymmdd_<neutral-slug>.md
 ```
 
 `pre-review` はユーザー確認欄が未チェックでも、匿名化と再現性を検査する。ユーザー確認後は同じcommandを `--mode final` で再実行する。mode未指定は後方互換のため `final` とする。

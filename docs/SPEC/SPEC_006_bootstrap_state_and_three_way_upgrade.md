@@ -89,9 +89,9 @@ feature stateは`applied / accepted-deviation / not-applicable / pending-review`
 - v0.7.0以前のplan schema 1は非互換として拒否する
 - stateがないprojectはlatest kitへ再adoptionし、最初のU0/L0を確立する
 - adoption記録があるstateなし旧adopterでは、upgrade scanがmetadataを復元して再adoption planへ自動routingする
-- stateなしlegacy scanは`--project-slug`の明示値を推定値より優先する。未指定時の推定は維持し、initと同じlowercase kebab-caseを検証する。stateあり経路はslug指定を拒否し、identity改名を通常scanへ混在させない
+- stateなしlegacy scanは`--project-slug`の明示値を推定値より優先する。未指定時の推定は維持し、initと同じlowercase kebab-caseを検証する。schema 2 stateの通常upgradeではslug指定を拒否し、identity改名を通常scanへ混在させない。schema 1のmetadata移行では次項の条件に従って初期slugを明示できる
 - 過去upstreamを推測復元しない
-- state schema 1はmetadata-only migration planでschema 2へ更新する。旧`project.name`をslug、旧`productName`をproduct name候補とし、人向けproject nameは明示確認を必須とする
+- state schema 1はmetadata-only migration planでschema 2へ更新する。旧`project.name`は有効なlowercase kebab-caseの場合だけslugとして保持する。人向け名称等で無効な場合は`--project-slug`の明示を求め、旧stateを書き換えず初期slugをmetadata移行planへ記録する。旧`productName`をproduct name候補とし、人向けproject nameは明示確認を必須とする。schema 2の既存slug変更はこの引数では受け付けない
 - schema migrationはcontent fileを変更せず、stateとhuman-readable adoption metadataだけを更新する。stale / integrity / clean kit HEADを確認し、再実行は`SKIP(SAME)`とする
 - Project Model変更は通常upgradeとして扱わず、別のreview可能なmigration planを必要とする
 - v0.8.2のstate migrationがsynthetic `snapshotAppliedAt`を人間向け履歴へ出力したstate schema 1は、state historyの`mature-adoption.at`を用いてhuman record、profile record、state、baselineをreview可能なupgrade planから訂正する
