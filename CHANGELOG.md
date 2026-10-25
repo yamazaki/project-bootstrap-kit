@@ -4,6 +4,17 @@
 
 ### Distribution
 
+## v0.13.0 - 2026-10-26
+
+### Distribution
+
+- developmentへセキュリティ確認ゲート、Cloudflare標準監査 / OSV依存検査のtooling profile、承認付き導入と結果検証、既存project向け追加経路を導入。Mantisは明示指示時の追加調査に限定
+- Cloudflare報告の取込・再取込でも実際の監査完了時刻を保持し、古い証跡が新しい監査結果として扱われないよう修正
+- 動的検証の案内を担当AIに応じて分岐。CodexにはCodex Cloud、Claude CodeにはClaudeのcloud sessionや専用VM・コンテナ・CIを候補として示し、安全条件確認・引継ぎ・結果確認の共通手順を追加
+
+- 進行中projectのTechnology Profile選択をpreview付きCLIで追加し、通常のstate upgradeから文書・skillを受け入れる経路を追加。配置済みの追跡外profileも修復可能。stateありの旧feature適用とscanのprofile指定は新手順を案内して停止
+- 未登録だが既存local contentがある新upstream pathを`manual-merged`で受け入れ、独自編集を保持できるようにした
+
 ## v0.12.0 - 2026-10-17
 
 ### Distribution

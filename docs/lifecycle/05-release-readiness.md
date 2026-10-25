@@ -26,3 +26,7 @@ production切替は、local acceptanceやrelease candidate作成とは別の判�
 - rollbackまたはforward-fix方針がある
 - production後の保守入口が決まっている
 - 利用者がrelease / deployを承認している
+
+## セキュリティ確認
+
+developmentのsecurity-gateで標準コード監査（Cloudflare）と依存検査（OSV）の対象・鮮度・結果を確認する。未導入・中断・未検証を0件成功にしない。Mantisは明示指示時の追加調査。secret・履歴・private情報の公開適否と外部操作承認は別途確認する。

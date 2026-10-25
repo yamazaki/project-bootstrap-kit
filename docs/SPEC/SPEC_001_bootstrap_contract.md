@@ -23,7 +23,7 @@
 - 未指定時も `docs/TECHNOLOGY/INDEX.md` と `ADOPTION.md` を配置する
 - 指定時は `profiles/<id>/` の文書とprofile固有skillを追加する
 - `--platform-profile` は受け付けず、`--technology-profile` に統一する
-- 初期化後も `technology-profiles` upgrade featureでprofileを追加できる
+- 初期化後はprofile選択を`--update-technology-profiles --add <id>`でstateへ登録し、通常scan / plan applyで文書・skillを追加できる（SPEC_006参照）。stateなし旧projectだけ`technology-profiles` featureを使用する
 
 ## 5. 生成記録
 

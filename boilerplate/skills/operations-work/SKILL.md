@@ -32,3 +32,7 @@ skillの起動だけを、本番変更、外部操作、ファイル変更、com
 - 恒久修正が必要なら `maintenance-work` へ引き継ぎ、MNTをリンクする
 - 原因未確定、再発監視、外部待ちの場合は `👀` または `🚫` と条件を明記する
 - 恒久Runbookや監視知識は適切な `REF` またはTechnology Profile採否へ反映する
+
+## セキュリティ確認
+
+開始、重要変更、受入、公開・release前は `docs/SECURITY_ASSURANCE.md` と `security-gate` skillで必要な検査を確認する。Cloudflareは標準コード監査、OSVは依存検査。未導入時は具体計画と利用者承認後に導入・監査へ進む。Mantisの導入・実行は明示指示時だけとする。

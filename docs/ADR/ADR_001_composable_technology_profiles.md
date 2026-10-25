@@ -48,3 +48,7 @@
 - 新規CLIは `--technology-profile` に統一し、旧 `--platform-profile` の互換aliasは設けない
 - legacy guidelineがprofileと同一なら削除する
 - 独自編集されている場合は `LEGACY_PLATFORM_GUIDELINE.md` へ移動して保全する
+
+## 6. 2026-10-24補足: stateful projectの後付け
+
+state導入後のprojectでfeatureによる配置だけを行うと、profile選択とpath追跡が取り残される。schema 2ではprofile選択をpreview付きの`--update-technology-profiles --add`で登録し、文書・skillの受入は通常scan / plan applyに統一する。配置済みの追跡外profileも同じ経路で修復する。featureはstateなし旧project向けに維持し、stateありでは新経路へ案内して停止する。詳細はSPEC_006を正本とする。

@@ -78,6 +78,7 @@ export function scanUpgradeTarget({ rootDir, targetRoot, planOutput, aiSurface, 
     });
   }
   const rawState = readJson(path.join(normalizedTarget, STATE_RELATIVE_PATH));
+  if (technologyProfiles.length > 0) throw new Error("--technology-profile is only supported by --scan for adopters without bootstrap state. For schema 2 use --update-technology-profiles --add <id> --reason <text> [--apply], then --scan. For schema 1 complete metadata migration first.");
   if (rawState.schemaVersion === 1) {
     console.log("Bootstrap state schema 1 detected; creating a metadata-only schema migration plan.");
     return scanStateSchemaMigration({ rootDir, targetRoot: normalizedTarget, planOutput, projectName, projectSlug });

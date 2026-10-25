@@ -85,7 +85,7 @@ CONFLICTは既存fileを保持したままplanへ記録される。詳細な解�
 5. `docs/WORK/0.1/implementation_ready_checklist.md` を確認する
 6. 実装着手前に `ROADMAP` と `PLAN_PHASE_CURRENT` を作成する
 
-採用技術がWORK/0.1の途中で確定した場合は、`technology-profiles` upgrade featureでprofileを後付けする。
+採用技術がWORK/0.1や実装・運用の途中で確定した場合もprofileを後付けできる。schema 2のstateがあるprojectは、`--update-technology-profiles --add <id> --reason "理由"`をpreview / applyして選択を登録し、通常scan / plan applyで文書・skillを受け入れる。stateなし旧projectだけ`technology-profiles` featureを使う。具体的な判断と追跡外profileの修復は[upgrade guide](docs/guides/upgrading.md#21-進行中projectへのtechnology-profile追加修復)を参照する。
 
 ## 6. テンプレートの意図
 

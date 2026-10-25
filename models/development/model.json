@@ -8,7 +8,12 @@
   "requireExactCoverage": true,
   "defaultOwnership": "kit-managed",
   "technologyProfilePolicy": "supported",
-  "aiSurfaces": ["codex", "claude", "both", "rovo"],
+  "aiSurfaces": [
+    "codex",
+    "claude",
+    "both",
+    "rovo"
+  ],
   "skillRoot": "skills",
   "sharedAssets": [],
   "assets": [
@@ -24,6 +29,8 @@
     "docs/PLAN_PHASE_CURRENT.md",
     "docs/REF/README.md",
     "docs/ROADMAP.md",
+    "docs/SECURITY_ASSURANCE.json",
+    "docs/SECURITY_ASSURANCE.md",
     "docs/SPEC/README.md",
     "docs/TECHNOLOGY/ADOPTION.md",
     "docs/TECHNOLOGY/INDEX.md",
@@ -65,8 +72,15 @@
     "skills/maintenance-work/SKILL.md",
     "skills/operations-work/SKILL.md",
     "skills/phase-transition/SKILL.md",
-    "skills/project-bootstrap/SKILL.md",
     "skills/project-bootstrap-kit-upgrade/SKILL.md",
+    "skills/project-bootstrap/SKILL.md",
+    "skills/security-gate/SKILL.md",
+    "skills/security-gate/references/commands.md",
+    "skills/security-gate/references/execution-environments.md",
+    "skills/security-gate/scripts/install.mjs",
+    "skills/security-gate/scripts/providers.mjs",
+    "skills/security-gate/scripts/security-gate.mjs",
+    "skills/security-gate/scripts/security-lib.mjs",
     "skills/technology-profile-governance/SKILL.md",
     "skills/version-governance/SKILL.md"
   ],
@@ -91,5 +105,7 @@
     "docs/ROADMAP.md",
     "docs/PLAN_PHASE_CURRENT.md"
   ],
-  "optionalPaths": ["CLAUDE.md"]
+  "optionalPaths": [
+    "CLAUDE.md"
+  ]
 }

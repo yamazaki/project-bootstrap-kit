@@ -21,6 +21,7 @@
     "legacy docs/PLATFORM_GUIDELINE.md"
   ],
   "notes": [
+    "Only for projects without BOOTSTRAP_STATE.json. Stateful projects use --update-technology-profiles --add <id> --reason <text> [--apply], then --scan and --apply-plan.",
     "Requires --ai-surface so common and profile-specific skills are installed consistently.",
     "--technology-profile is optional and repeatable.",
     "Profiles can be added after WORK/0.1 technology selection.",

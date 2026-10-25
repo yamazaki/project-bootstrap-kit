@@ -9,7 +9,8 @@ import { fileURLToPath } from "node:url";
 import { acceptAdoptionManualMerge, setAdoptionDecisions } from "./adoption-plan-lib.mjs";
 import { acceptUpgradeDecision, updatePathOwnership } from "./bootstrap-upgrade-state-lib.mjs";
 import { scanUpgradeTarget, applyUpgradePlan } from "./upgrade-plan-lib.mjs";
-import { entryInfo, walkDistributionFiles } from "./bootstrap-state-lib.mjs";
+import { entryInfo, readAndValidateBootstrapState, walkDistributionFiles } from "./bootstrap-state-lib.mjs";
+import { applyTechnologyProfiles } from "./technology-profile-lib.mjs";
 
 const sourceRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), "project-bootstrap-upgrade-test-"));
@@ -53,6 +54,165 @@ try {
   git(["add", "."]);
   git(["-c", "user.name=Kit Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "fixture snapshot"]);
 
+  // Add profiles during development, then accept their content through the normal plan.
+  const profileTarget = target("profile-addition"); fresh(profileTarget, "both");
+  const stateFile = path.join(profileTarget, "docs/BOOTSTRAP_STATE.json");
+  const originalState = json(stateFile);
+  const originalProfileSnapshot = snapshot(profileTarget);
+  const registerArgs = ["--target", profileTarget, "--update-technology-profiles", "--add", "slack", "--reason", "adopt integration during development"];
+  check("profile registration previews without modifying state or content", () => {
+    assert.match(cli(registerArgs), /PREVIEW/u);
+    assert.deepEqual(snapshot(profileTarget), originalProfileSnapshot);
+  });
+  check("registration validates the whole selection and CLI before any writes", () => {
+    for (const id of ["missing-profile", "../escape", "", "--apply"]) {
+      cli([...registerArgs, "--add", id, "--apply"], 1);
+      assert.deepEqual(snapshot(profileTarget), originalProfileSnapshot);
+    }
+    cli(["--target", profileTarget, "--update-technology-profiles", "--add", "slack", "--apply"], 1);
+    cli([...registerArgs, "--scan", "--apply"], 1);
+    cli([...registerArgs, "--ai-surface", "codex", "--apply"], 1);
+    cli(["--target", profileTarget, "--scan", "--add", "slack"], 1);
+    assert.deepEqual(snapshot(profileTarget), originalProfileSnapshot);
+  });
+  const staleProfilePlan = path.join(temp, "before-profile-registration.json");
+  cli(["--target", profileTarget, "--scan", "--plan-output", staleProfilePlan]);
+  check("registration changes only selection/history; old plans become stale; rerun is stable", () => {
+    assert.match(cli([...registerArgs, "--add", "slack", "--apply"]), /UPDATED/u);
+    const state = readAndValidateBootstrapState(profileTarget, kit).state;
+    assert.deepEqual(state.project, { ...originalState.project, technologyProfiles: ["slack"] });
+    assert.deepEqual(state.paths, originalState.paths);
+    assert.deepEqual(state.features, originalState.features);
+    assert.deepEqual(state.kit, originalState.kit);
+    assert.equal(state.history.at(-1).operation, "technology-profile-addition");
+    assert.deepEqual(snapshot(profileTarget).filter(([p]) => p !== "docs/BOOTSTRAP_STATE.json"), originalProfileSnapshot.filter(([p]) => p !== "docs/BOOTSTRAP_STATE.json"));
+    const bytes = fs.readFileSync(stateFile);
+    assert.match(cli([...registerArgs, "--apply"]), /SKIP\(SAME\)/u);
+    assert.deepEqual(fs.readFileSync(stateFile), bytes);
+    assert.match(cli(["--apply-plan", staleProfilePlan], 1), /state changed/u);
+  });
+  function acceptProfilePlan(dir, planPath) {
+    const { plan } = scanUpgradeTarget({ rootDir: kit, targetRoot: dir, planOutput: planPath });
+    const missing = plan.paths.find((p) => p.state === "NEW_UPSTREAM_PATH" && !p.local.exists);
+    if (missing) {
+      const before = fs.readFileSync(planPath);
+      assert.throws(() => acceptUpgradeDecision({ rootDir: kit, planPath, relativePath: missing.path, decision: "manual-merged", reason: "no local content" }), /requires existing local content/u);
+      assert.deepEqual(fs.readFileSync(planPath), before);
+    }
+    for (const item of plan.paths.filter((p) => p.state !== "CURRENT")) {
+      const decision = item.state === "NEW_UPSTREAM_PATH" ? "add" : item.state === "UPSTREAM_CHANGED" ? "safe-update" : "manual-merged";
+      acceptUpgradeDecision({ rootDir: kit, planPath, relativePath: item.path, decision, reason: "reviewed profile content", confirm: true });
+    }
+    applyUpgradePlan({ rootDir: kit, planPath });
+    const rerun = scanUpgradeTarget({ rootDir: kit, targetRoot: dir, planOutput: `${planPath}.rerun` });
+    assert(rerun.plan.paths.every((item) => item.state === "CURRENT"));
+    return plan;
+  }
+  check("scan includes profile documents/skills and accepts index/adoption without local-only drift", () => {
+    const plan = acceptProfilePlan(profileTarget, path.join(temp, "profile-plan.json"));
+    for (const p of ["docs/TECHNOLOGY/INDEX.md", "docs/TECHNOLOGY/ADOPTION.md"]) assert.equal(plan.paths.find((item) => item.path === p).state, "UPSTREAM_CHANGED");
+    assert.equal(plan.paths.filter((item) => item.path.includes("/slack/")).length, 2);
+    const state = json(stateFile);
+    assert(state.paths.some((item) => item.path === "docs/TECHNOLOGY/slack/GUIDELINE.md"));
+  });
+  check("multiple additions preserve selected profiles and use the stored AI surface", () => {
+    cli(["--target", profileTarget, "--update-technology-profiles", "--add", "cloudflare-workers", "--add", "slack", "--reason", "add runtime", "--apply"]);
+    assert.deepEqual(json(stateFile).project.technologyProfiles, ["slack", "cloudflare-workers"]);
+    acceptProfilePlan(profileTarget, path.join(temp, "second-profile.json"));
+    for (const surface of [".agents", ".claude"]) assert(json(stateFile).paths.some((item) => item.path === `${surface}/skills/cloudflare-workers-guidance/SKILL.md`));
+    const claude = target("profile-claude"); fresh(claude, "claude");
+    cli(["--target", claude, "--update-technology-profiles", "--add", "slack", "--add", "cloudflare-workers", "--reason", "multiple selection", "--apply"]);
+    acceptProfilePlan(claude, path.join(temp, "claude-profile.json"));
+    assert.equal(fs.existsSync(path.join(claude, ".agents/skills/cloudflare-workers-guidance")), false);
+    assert(fs.existsSync(path.join(claude, ".claude/skills/cloudflare-workers-guidance/SKILL.md")));
+  });
+  check("schema-2 feature/scan selectors refuse with registration guidance and no writes", () => {
+    const before = snapshot(profileTarget);
+    for (const mode of ["--dry-run", "--apply", "--diff"]) assert.match(cli(["--target", profileTarget, "--feature", "technology-profiles", "--technology-profile", "slack", "--ai-surface", "both", mode], 1), /--update-technology-profiles/u);
+    assert.match(cli(["--target", profileTarget, "--scan", "--technology-profile", "slack"], 1), /--update-technology-profiles/u);
+    assert.deepEqual(snapshot(profileTarget), before);
+  });
+  const repair = target("untracked-profile"); fresh(repair, "both");
+  // Reproduce the old feature's content-only behavior, including later adoption notes.
+  applyTechnologyProfiles({ rootDir: kit, profilesDir: path.join(kit, "profiles"), targetRoot: repair, profileIds: ["cloudflare-workers"], aiSurface: "both", appliedAt: "2026-10-19 00:00:00Z" });
+  const repairNote = path.join(repair, "docs/TECHNOLOGY/ADOPTION.md");
+  fs.appendFileSync(repairNote, "\nProject-specific integration decision\n");
+  const repairGuideline = path.join(repair, "docs/TECHNOLOGY/cloudflare-workers/GUIDELINE.md");
+  fs.appendFileSync(repairGuideline, "\nProject-specific guideline\n");
+  const repairSkill = path.join(repair, ".agents/skills/cloudflare-workers-guidance/SKILL.md");
+  fs.appendFileSync(repairSkill, "\nProject-specific skill\n");
+  const repairBefore = [repairNote, repairGuideline, repairSkill].map((p) => fs.readFileSync(p));
+  check("untracked profile repair preserves custom content with manual decisions and converges", () => {
+    cli(["--target", repair, "--update-technology-profiles", "--add", "cloudflare-workers", "--reason", "repair untracked runtime", "--apply"]);
+    const repairPlan = path.join(temp, "repair-profile.json");
+    const { plan } = scanUpgradeTarget({ rootDir: kit, targetRoot: repair, planOutput: repairPlan });
+    for (const item of plan.paths.filter((p) => p.state !== "CURRENT")) {
+      const customizedNew = ["docs/TECHNOLOGY/cloudflare-workers/GUIDELINE.md", ".agents/skills/cloudflare-workers-guidance/SKILL.md"].includes(item.path);
+      acceptUpgradeDecision({ rootDir: kit, planPath: repairPlan, relativePath: item.path, decision: customizedNew ? "manual-merged" : item.state === "NEW_UPSTREAM_PATH" ? "add" : "manual-merged", reason: "preserve existing project content", confirm: true });
+    }
+    applyUpgradePlan({ rootDir: kit, planPath: repairPlan });
+    for (let i = 0; i < repairBefore.length; i += 1) assert.deepEqual(fs.readFileSync([repairNote, repairGuideline, repairSkill][i]), repairBefore[i]);
+    const rerun = scanUpgradeTarget({ rootDir: kit, targetRoot: repair, planOutput: path.join(temp, "repair-check.json") });
+    assert(rerun.plan.paths.every((item) => item.state === "CURRENT"));
+  });
+  check("bad state, missing baseline and inapplicable model reject before selection writes", () => {
+    const stateBytes = fs.readFileSync(stateFile);
+    const state = json(stateFile); state.project.technologyProfiles = [];
+    writeJson(stateFile, state);
+    assert.match(cli([...registerArgs, "--apply"], 1), /integrity/u);
+    fs.writeFileSync(stateFile, stateBytes);
+    const baseline = path.join(profileTarget, json(stateFile).paths.find((p) => p.baselineObject).baselineObject);
+    const baselineBytes = fs.readFileSync(baseline); fs.rmSync(baseline);
+    assert.match(cli([...registerArgs, "--apply"], 1), /Baseline object is missing/u);
+    fs.writeFileSync(baseline, baselineBytes);
+    assert.deepEqual(fs.readFileSync(stateFile), stateBytes);
+    const workspace = target("profile-workspace");
+    command(process.execPath, [path.join(kit, "scripts/init-project.mjs"), "--target", workspace, "--project-model", "task-workspace", "--project-name", "Workspace", "--project-slug", "workspace", "--ai-surface", "codex"]);
+    const before = snapshot(workspace);
+    assert.match(cli(["--target", workspace, "--update-technology-profiles", "--add", "slack", "--reason", "unsupported", "--apply"], 1), /not applicable|does not support/u);
+    assert.deepEqual(snapshot(workspace), before);
+  });
+  check("schema-1/no-state registration and schema-1 scan selector fail without writes", () => {
+    const bytes = fs.readFileSync(stateFile);
+    const schema1 = json(stateFile); schema1.schemaVersion = 1;
+    writeJson(stateFile, schema1);
+    const before = snapshot(profileTarget);
+    assert.match(cli([...registerArgs, "--apply"], 1), /Unsupported bootstrap state schema/u);
+    assert.match(cli(["--target", profileTarget, "--scan", "--technology-profile", "slack"], 1), /metadata migration first/u);
+    assert.deepEqual(snapshot(profileTarget), before);
+    fs.rmSync(stateFile);
+    assert.match(cli([...registerArgs, "--apply"], 1), /state is missing/u);
+    assert.equal(fs.existsSync(stateFile), false);
+    fs.writeFileSync(stateFile, bytes);
+  });
+  check("registration refuses state symlinks and multiline reasons without changing content", () => {
+    const bytes = fs.readFileSync(stateFile);
+    const outside = path.join(temp, "outside-state.json"); fs.writeFileSync(outside, bytes);
+    fs.rmSync(stateFile); fs.symlinkSync(outside, stateFile);
+    assert.match(cli([...registerArgs, "--apply"], 1), /symbolic link/u);
+    assert.deepEqual(fs.readFileSync(outside), bytes);
+    fs.rmSync(stateFile); fs.writeFileSync(stateFile, bytes);
+    assert.match(cli([...registerArgs, "--reason", "two\nlines", "--apply"], 1), /single line/u);
+    assert.deepEqual(fs.readFileSync(stateFile), bytes);
+  });
+  check("inapplicable profile metadata is rejected as a whole before registration", () => {
+    const metadataPath = path.join(kit, "profiles/slack/profile.json");
+    const bytes = fs.readFileSync(metadataPath);
+    const metadata = json(metadataPath); metadata.supportedProjectModels = ["task-workspace"];
+    writeJson(metadataPath, metadata);
+    const before = snapshot(profileTarget);
+    assert.match(cli([...registerArgs, "--apply"], 1), /not applicable/u);
+    assert.deepEqual(snapshot(profileTarget), before);
+    fs.writeFileSync(metadataPath, bytes);
+  });
+  check("registered profile participates in future upstream change detection", () => {
+    const guideline = path.join(kit, "profiles/slack/GUIDELINE.md");
+    fs.appendFileSync(guideline, "\nUpdated upstream profile principle\n");
+    git(["add", "."]); git(["-c", "user.name=Kit Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "profile update fixture"]);
+    const { plan } = scanUpgradeTarget({ rootDir: kit, targetRoot: profileTarget, planOutput: path.join(temp, "profile-future.json") });
+    assert.equal(plan.paths.find((item) => item.path === "docs/TECHNOLOGY/slack/GUIDELINE.md").state, "UPSTREAM_CHANGED");
+  });
+
   const legacy = target("legacy");
   fresh(legacy);
   const originalRecord = fs.readFileSync(path.join(legacy, "docs/BOOTSTRAP_ADOPTION.md"), "utf8");
@@ -84,6 +244,15 @@ try {
   check("invalid/empty slug rejected by library and CLI", () => {
     for (const projectSlug of ["Bad Slug", "", "../escape"]) assert.throws(() => scanUpgradeTarget({ rootDir: kit, targetRoot: legacy, projectSlug, planOutput: path.join(temp, "invalid.json") }), /Invalid project slug/u);
     cli(["--target", legacy, "--scan", "--project-slug", "Bad Slug"], 1);
+  });
+  check("stateless adoption still accepts profile selectors and includes their skill paths", () => {
+    const before = snapshot(legacy);
+    const file = path.join(temp, "legacy-profile-selection.json");
+    cli(["--target", legacy, "--scan", "--technology-profile", "cloudflare-workers", "--plan-output", file]);
+    const plan = json(file);
+    assert.deepEqual(plan.options.technologyProfiles, ["cloudflare-workers"]);
+    assert(plan.files.some((item) => item.path === ".agents/skills/cloudflare-workers-guidance/SKILL.md"));
+    assert.deepEqual(snapshot(legacy), before);
   });
 
   const rows = [

@@ -2,6 +2,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { loadProjectModelCatalog, resolveProjectModel } from "./project-model-lib.mjs";
+import { assertTechnologyProfilesApplicable } from "./technology-profile-lib.mjs";
 import {
   copyDistributionTree,
   copyEntry,
@@ -225,6 +227,7 @@ export function acceptUpgradeDecision({ rootDir, planPath, relativePath, decisio
   if (!["manual-merged", "accepted-deviation", "deferred", "safe-update", "add", "skip"].includes(decision)) throw new Error(`Unsupported decision: ${decision}`);
   const item = plan.paths.find((entry) => entry.path === relativePath);
   if (!item || item.state === "CURRENT") throw new Error(`Path is not reviewable: ${relativePath}`);
+  if (decision === "manual-merged" && item.state === "NEW_UPSTREAM_PATH" && !entryInfo(targetRoot, relativePath).exists) throw new Error(`${relativePath}: manual-merged for a new upstream path requires existing local content`);
   item.reason = validateSingleLineReason(reason, relativePath);
   item.decision = decision;
   item.decisionAcceptedAt = new Date().toISOString();
@@ -257,11 +260,12 @@ function validateDecisions(plan) {
     if ((item.decision === "safe-update" || item.decision === "add") && !item.U1) throw new Error(`${item.path}: ${item.decision} requires current upstream content`);
     if (item.decision === "accepted-deviation" && item.ownership === "kit-managed") throw new Error(`${item.path}: kit-managed paths must transition ownership or use manual-merged before accepting a deviation`);
     if (item.decision === "manual-merged" && (!item.decisionAcceptedAt || item.acceptedProjectHash !== entryInfo(plan.target, item.path).hash)) throw new Error(`${item.path}: manual merge was not accepted against current local content`);
+    if (item.decision === "manual-merged" && item.state === "NEW_UPSTREAM_PATH" && !entryInfo(plan.target, item.path).exists) throw new Error(`${item.path}: manual-merged for a new upstream path requires existing local content`);
     const allowedByState = {
       UPSTREAM_CHANGED: ["safe-update", "manual-merged", "accepted-deviation", "deferred"],
       LOCAL_CHANGED: ["manual-merged", "deferred"],
       DIVERGED: ["manual-merged", "accepted-deviation", "deferred"],
-      NEW_UPSTREAM_PATH: ["add", "skip", "deferred"],
+      NEW_UPSTREAM_PATH: ["add", "skip", "manual-merged", "deferred"],
     };
     if (!allowedByState[item.state]?.includes(item.decision)) throw new Error(`${item.path}: ${item.decision} is not valid for ${item.state}`);
   }
@@ -482,4 +486,28 @@ export function updateFeatureState({ rootDir, targetRoot, featureName, featureSt
   state.history.push({ at, operation: "feature-state-transition", feature: featureName, from: previous, to: featureState, reason: nextReason, evidence: state.features[featureName].evidence });
   writeBootstrapState(targetRoot, state);
   return state.features[featureName];
+}
+
+export function updateTechnologyProfiles({ rootDir, targetRoot, addProfiles, reason, apply = false }) {
+  for (const relativePath of ["docs", "docs/BOOTSTRAP_STATE.json"]) {
+    const targetPath = path.join(targetRoot, relativePath);
+    if (entryExists(targetPath) && fs.lstatSync(targetPath).isSymbolicLink()) throw new Error(`Profile registration refuses a symbolic link: ${relativePath}`);
+  }
+  const { state } = readAndValidateBootstrapState(targetRoot, rootDir);
+  const nextReason = validateSingleLineReason(reason, "technology profiles");
+  if (!Array.isArray(addProfiles) || addProfiles.length === 0 || addProfiles.some((id) => typeof id !== "string" || !/^[a-z0-9][a-z0-9-]*$/u.test(id))) throw new Error("Profile registration requires one or more valid --add <profile-id> options.");
+  const model = resolveProjectModel(loadProjectModelCatalog(rootDir), state.project.model.id);
+  if (model.technologyProfilePolicy !== "supported") throw new Error(`Project Model ${model.id} does not support Technology Profiles.`);
+  if (!Array.isArray(state.project.technologyProfiles)) throw new Error("Bootstrap state technologyProfiles must be an array.");
+  const previous = state.project.technologyProfiles;
+  const next = [...new Set([...previous, ...addProfiles])];
+  assertTechnologyProfilesApplicable(path.join(rootDir, "profiles"), next, model.id);
+  for (const warning of reasonWarnings(nextReason, "technology profiles")) console.warn(`[WARN] ${warning}`);
+  const added = next.filter((id) => !previous.includes(id));
+  if (!apply || added.length === 0) return { previous, next, added, applied: false };
+  // Metadata only: content and path/baseline acceptance belong to the next reviewed plan.
+  state.project.technologyProfiles = next;
+  state.history.push({ at: new Date().toISOString(), operation: "technology-profile-addition", from: previous, to: next, added, reason: nextReason });
+  writeBootstrapState(targetRoot, state);
+  return { previous, next, added, applied: true };
 }

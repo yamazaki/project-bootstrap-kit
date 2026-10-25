@@ -39,6 +39,8 @@
 
 ### technology-profiles
 
+- stateなし旧project専用。stateありではdry-run / applyとも停止し、schema 2の選択登録CLI→通常scan / plan applyへ案内する。schema 1は先にmetadata移行する
+
 - `docs/TECHNOLOGY/INDEX.md` と `ADOPTION.md` を追加する
 - 任意・複数のTechnology Profile文書とprofile固有skillを追加する
 - WORK/0.1で採用技術が確定した後のprofile後付けに対応する
@@ -166,7 +168,8 @@
 
 ### Technology Profile方式へ移行またはprofileを追加する場合
 
-1. `technology-profiles`
+1. stateなし旧project: `technology-profiles`
+2. schema 2: `--update-technology-profiles --add <id> --reason <text>`のpreview / apply後に通常scan / plan apply。追跡外profileも同じ経路で修復する
 
 ### Claude Code向けプロジェクト指示を追加する場合
 
@@ -305,3 +308,9 @@ node scripts/upgrade-project.mjs \
 - dry-run で確認した内容に基づいて実際に変更が反映される
 - `docs/BOOTSTRAP_ADOPTION.md` に履歴が追記される
 - 反映後は `git diff` などで変更内容を確認する
+
+### security-assurance
+
+- 共通gate・project policy・手順・ignoreを追加する。既存security文書・同名skillは保全する。
+- stateありは通常scan / plan、stateなし限定導入はfeature preview / applyを使う。
+- 外部tool導入・監査はhandlerから起動せず、2profileの追加後に別の承認付きplanで行う。

@@ -54,6 +54,36 @@ ownershipと状態に応じ、safe-update、manual merge、accepted deviation、
 
 `--update-path-state` などでownership/stateを更新した場合は再scanし、新planへ判断する。state更新前のplanをそのまま使うとstaleとして停止する。
 
+## 2.1 進行中projectへのTechnology Profile追加・修復
+
+schema 2のstateがある場合は、profile選択の登録をpreviewする。WORK/0.1後や実装・運用の途中でも使用できる。
+
+```bash
+node scripts/upgrade-project.mjs \
+  --target /path/to/adopted-project \
+  --update-technology-profiles --add cloudflare-workers --add slack \
+  --reason "実装で採用するruntimeと連携先を追加"
+```
+
+確認後に同じcommandへ`--apply`を付ける。この操作はstateの`project.technologyProfiles`へ追加し、理由・日時・変更前後をhistoryへ残す。既存選択は保持し、同じ追加の再実行は`SKIP(SAME)`。state schema、identity、AI surface、snapshot日時、path / baseline、featureの受入状態、既存のkit受入versionは変更しない。
+
+登録だけではファイルを配置せず、既存ファイルも受け入れない。次のscanで新profileの文書・skillが`NEW_UPSTREAM_PATH`に、本書とは別の適用先`docs/TECHNOLOGY/INDEX.md` / `ADOPTION.md`がprofileを含む想定構成との差分に現れる。AI surfaceはstateの設定を使う。
+
+```bash
+node scripts/upgrade-project.mjs --target /path/to/adopted-project --scan --plan-output /tmp/profile-addition/plan.json
+node scripts/upgrade-project.mjs --accept-path-decision /tmp/profile-addition/plan.json --path docs/TECHNOLOGY/slack/GUIDELINE.md --decision add --reason "guidelineの追加を確認" --confirm
+```
+
+上記の受入commandは1pathの例である。plan全体を確認して残りのpathも判断する。`add --confirm`は既存local contentもupstreamで置き換えるため、同一内容か確認する。独自編集された既存ファイルは内容を統合・確認して`manual-merged`で保持する。`NEW_UPSTREAM_PATH`でもlocalが存在すれば`manual-merged`を使用できる。INDEX / ADOPTIONがlocal未変更の`UPSTREAM_CHANGED`なら`safe-update --confirm`、独自記録があれば1ファイルずつ`manual-merged`を使う。
+
+全path判断後に`--apply-plan /tmp/profile-addition/plan.json`を実行し、別pathの確認scanで受入済みprofileが`CURRENT`になることを確認する。保留は理由付きで残す。baselineと受入hashはこの段階で確立する。
+
+既にfeatureで文書・skillだけ配置し追跡外になったprojectも、同じ登録→scan→review→applyで修復できる。stateやintegrityを手編集しない。登録前のplanはstaleになるため再生成する。未知ID、不適用Model、不正state / baselineは登録前に停止する。profile削除、Model / AI surface変更はこのCLIでは扱わない。
+
+stateありの`--feature technology-profiles`はdry-run / applyとも停止し、この経路を案内する。stateありscanの`--technology-profile`も黙って無視せず停止する。schema 1は先にmetadata移行を完了する。stateなし旧projectでは従来featureを使用でき、state移行と同時に選択する場合は`--scan --technology-profile <id>`でadoption planへ含める。
+
+rollbackは事前の退避点へ戻す。登録だけならstateの復元で足りるが、plan適用後は対象ファイル・state・baseline・人向け履歴を同じ退避点から復元する。古いplanは再利用しない。
+
 ## 3. Schema 1から2
 
 schema 1 stateではmetadata-only migration planを生成する。人向けProject Nameを確認し、明示して再scanする。

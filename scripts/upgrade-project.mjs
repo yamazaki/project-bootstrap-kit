@@ -13,7 +13,7 @@ import {
   printSection,
 } from "./upgrade-lib.mjs";
 import { applyUpgradePlan, scanUpgradeTarget } from "./upgrade-plan-lib.mjs";
-import { acceptUpgradeDecision, updateFeatureState, updatePathOwnership } from "./bootstrap-upgrade-state-lib.mjs";
+import { acceptUpgradeDecision, updateFeatureState, updatePathOwnership, updateTechnologyProfiles } from "./bootstrap-upgrade-state-lib.mjs";
 import { acceptAdoptionManualMerge, setAdoptionDecisions } from "./adoption-plan-lib.mjs";
 import { readAndValidateBootstrapState, STATE_RELATIVE_PATH } from "./bootstrap-state-lib.mjs";
 
@@ -45,6 +45,7 @@ function usage() {
   node scripts/upgrade-project.mjs --accept-path-decision <plan> --path <path> --decision <value> --reason <reason> [--confirm]
   node scripts/upgrade-project.mjs --target <path> --update-path-state --path <path> --ownership <value> --reason <reason> [--satisfied-by <path>|--superseded-by <path>]
   node scripts/upgrade-project.mjs --target <path> --update-feature-state --feature <id> --feature-state <value> --reason <reason> [--evidence <value> ...]
+  node scripts/upgrade-project.mjs --target <path> --update-technology-profiles --add <profile-id> [--add <profile-id> ...] --reason <reason> [--dry-run|--apply]
 
 Options:
   --target <path>                 Target project path
@@ -60,8 +61,10 @@ Options:
   --accept-path-decision <path>  Record a reviewed state-upgrade path decision
   --update-path-state            Change ownership/path state without editing the manifest directly
   --update-feature-state         Change feature state with reason and evidence
+  --update-technology-profiles   Register profile additions in schema 2 state (preview by default)
+  --add <profile-id>             Repeatable profile addition for --update-technology-profiles
   --ai-surface <value>           codex | claude | rovo | both
-  --technology-profile <id>      Repeatable technology profile selector
+  --technology-profile <id>      Repeatable selector for stateless adopters (stateful: use --update-technology-profiles)
   --project-name <name>          Override legacy adoption project name inference
   --project-slug <slug>          Set legacy slug (no state or schema 1 migration only)
   --product-name <name>          Override legacy adoption product name inference
@@ -91,6 +94,7 @@ function parseArgs(argv) {
     feature: "",
     aiSurface: "",
     technologyProfiles: [],
+    addProfiles: [],
     mode: "dry-run",
     diff: false,
     diffOutput: "",
@@ -114,8 +118,10 @@ function parseArgs(argv) {
     applySafeOnly: false,
   };
 
+  const seenOptions = new Set();
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
+    seenOptions.add(arg);
     if (arg === "--target") {
       args.target = argv[i + 1] ?? "";
       i += 1;
@@ -152,6 +158,16 @@ function parseArgs(argv) {
       args.operation = "update-path-state";
     } else if (arg === "--update-feature-state") {
       args.operation = "update-feature-state";
+    } else if (arg === "--update-technology-profiles") {
+      args.operation = "update-technology-profiles";
+    } else if (arg === "--add") {
+      const profileId = argv[i + 1] ?? "";
+      if (!/^[a-z0-9][a-z0-9-]*$/u.test(profileId)) {
+        console.error("--add requires a valid technology profile id.");
+        process.exit(1);
+      }
+      args.addProfiles.push(profileId);
+      i += 1;
     } else if (arg === "--path") {
       args.decisionPath = argv[i + 1] ?? "";
       i += 1;
@@ -213,6 +229,17 @@ function parseArgs(argv) {
       usage();
       process.exit(1);
     }
+  }
+
+  if (seenOptions.has("--update-technology-profiles")) {
+    const allowed = new Set(["--target", "--update-technology-profiles", "--add", "--reason", "--dry-run", "--apply"]);
+    if ([...seenOptions].some((option) => !allowed.has(option)) || !args.target || !args.reason || args.addProfiles.length === 0) {
+      console.error("--update-technology-profiles requires --target, --add <profile-id> and --reason; only --dry-run / --apply may be combined with this operation.");
+      process.exit(1);
+    }
+  } else if (args.addProfiles.length > 0) {
+    console.error("--add requires --update-technology-profiles.");
+    process.exit(1);
   }
 
   if (args.operation === "feature" && (!args.target || !args.feature)) {
@@ -572,6 +599,19 @@ if (args.operation === "update-feature-state") {
     console.log(`Updated feature ${args.feature} to ${args.featureState}.`);
   } catch (error) {
     console.error(`Feature state update failed: ${error.message}`);
+    process.exit(1);
+  }
+  process.exit(0);
+}
+
+if (args.operation === "update-technology-profiles") {
+  try {
+    const result = updateTechnologyProfiles({ rootDir, targetRoot: path.resolve(args.target), addProfiles: args.addProfiles, reason: args.reason, apply: args.mode === "apply" });
+    const status = result.added.length === 0 ? "SKIP(SAME)" : result.applied ? "UPDATED" : "PREVIEW";
+    console.log(`[${status}] Technology Profiles: ${result.previous.join(", ") || "none"} -> ${result.next.join(", ")}`);
+    console.log(result.applied || result.added.length === 0 ? "Run --scan, review profile documents/skills and INDEX/ADOPTION decisions, then --apply-plan. Registration alone does not install or accept content." : "State and content are unchanged. Review the selection, then use --apply to register it before --scan.");
+  } catch (error) {
+    console.error(`Technology profile registration failed: ${error.message}`);
     process.exit(1);
   }
   process.exit(0);

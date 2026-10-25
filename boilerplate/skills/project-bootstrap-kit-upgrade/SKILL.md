@@ -35,6 +35,10 @@ stateなしの旧adopterで改名している場合は、scanへ `--project-name
 
 schema migration適用後は再scanし、次のoperationを読み直す。
 
+## Technology Profileの追加・修復
+
+profileを初期化後に追加する場合は、`technology-profile-governance` skillとkitの`docs/guides/upgrading.md`を参照する。schema 2では`--update-technology-profiles --add <id> --reason "理由"`をpreviewし、同じcommandへ`--apply`を付けて選択だけを登録してからscanする。配置済みの追跡外profileも同じ手順で修復できる。state更新前のplanを再利用せず、featureの`--apply`でstate追跡を代替しない。
+
 ## legacy migrationの判断
 
 ADD/CONFLICTごとに必要性、差分、project固有責務、代替pathを確認する。Git履歴と確認済みkit適用commitは補助証拠にできるが、履歴欠落・squash・rename・未commit編集を考慮し、「変更commitなし」だけでreplaceを決めない。旧upstreamを推測で復元しない。
@@ -83,6 +87,8 @@ node scripts/upgrade-project.mjs --accept-path-decision /tmp/project-bootstrap-u
 ```
 
 state-upgradeではbundleのU0/U1/L1、ownershipとpath stateを確認し、manual-merged / accepted-deviation / deferred / safe-update / add / skipを選ぶ。safe-updateとaddには `--confirm` が必要。accepted-deviationには適切なownershipを確立する。schema間で語彙を混ぜず、状態に合わない判断を無理に通さない。
+
+`NEW_UPSTREAM_PATH`でも既存local contentがある場合は`manual-merged`で固有編集を保持して受け入れられる。新pathへ`add --confirm`するとupstreamを配置するため、既存内容との相違を先に確認する。
 
 `--update-path-state` などでownershipやstateを更新した場合は、その後に再scanして新planを使う。state更新前のplanへ判断を追加するとstaleになるため、順序を混在させない。
 

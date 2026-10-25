@@ -100,7 +100,7 @@ try {
   assert(verifyFeedbackExport(traversalTarget, { mode: "final", targetRoot: kitRoot }).failures.some((item) => item.includes("invalid kit target path")), "kit intake rejects target path traversal");
   // Exercise real bootstrap and the legacy capture feature in a disposable project.
   const fixtureKit = path.join(tempRoot, "kit");
-  const inventory = spawnSync("git", ["-C", kitRoot, "ls-files", "--cached", "-z"], { encoding: "utf8" });
+  const inventory = spawnSync("git", ["-C", kitRoot, "ls-files", "--cached", "--others", "--exclude-standard", "-z"], { encoding: "utf8" });
   if (inventory.status !== 0) throw new Error(inventory.stderr);
   for (const relative of inventory.stdout.split("\0").filter(Boolean)) {
     const destination = path.join(fixtureKit, relative);
@@ -175,6 +175,8 @@ try {
   const docPath = path.join(project, "docs", "DOCUMENTATION.md");
   fs.writeFileSync(docPath, fs.readFileSync(docPath, "utf8").replaceAll("docs/project-bootstrap-kit-feedback/", "docs/WORK/<phase>.<milestone>/"));
   const technologyArgs = ["--target", project, "--feature", "technology-profiles", "--ai-surface", "both", "--technology-profile", "cloudflare-workers"];
+  // This handler supports stateless legacy adopters; stateful projects use reviewed plans.
+  fs.rmSync(path.join(project, "docs/BOOTSTRAP_STATE.json"));
   run("upgrade-project.mjs", [...technologyArgs, "--dry-run", "--diff", "--diff-output", path.join(tempRoot, "feedback-location.diff")]);
   assert(fs.readFileSync(docPath, "utf8").includes("docs/WORK/<phase>.<milestone>/kit_feedback_"), "feedback location preview does not rewrite old guidance");
   run("upgrade-project.mjs", [...technologyArgs, "--apply"]);

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "providers": { "codeAudit": "cloudflare", "dependencies": "osv" },
+  "mantis": "explicit-request-only",
+  "owner": "",
+  "baselineMaxAgeHours": 720,
+  "dependencyMaxAgeHours": 24,
+  "maxSeconds": 900,
+  "maxAgentInvocations": 32
+}

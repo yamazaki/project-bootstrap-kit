@@ -1,1 +1,5 @@
 .bootstrap-upgrade-diff/
+
+.security-tools/
+.agents/skills/security-audit/
+.claude/skills/security-audit/

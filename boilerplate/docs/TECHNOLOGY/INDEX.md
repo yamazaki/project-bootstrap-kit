@@ -35,7 +35,32 @@
 
 ## 4. profile追加
 
-技術がWORK/0.1の途中または完了時に確定した場合は、project-bootstrap-kit側で次をdry-runする。
+WORK/0.1や実装・運用の途中で技術を追加する場合は、project-bootstrap-kitのcheckoutで実行する。
+
+`docs/BOOTSTRAP_STATE.json`がschema 2の場合は、選択の登録をpreviewする。
+
+```bash
+node scripts/upgrade-project.mjs \
+  --target /path/to/repo \
+  --update-technology-profiles --add <profile-id> \
+  --reason "追加する理由"
+```
+
+確認後に同じcommandへ`--apply`を付ける。登録はstateの一覧と履歴だけを更新し、文書・skillの配置や受入は行わない。AI surfaceはstateの設定を使う。複数追加は`--add`を繰り返す。
+
+続いてscanし、新profileの文書・skillと本書 / `ADOPTION.md`の差分をreviewする。
+
+```bash
+node scripts/upgrade-project.mjs \
+  --target /path/to/repo --scan \
+  --plan-output /tmp/profile-addition/plan.json
+```
+
+`NEW_UPSTREAM_PATH`は内容を確認して`--accept-path-decision <plan> --path <path> --decision add --reason "追加理由" --confirm`で承認する。既存の独自編集は1ファイルずつ統合し、`manual-merged`で受け入れる。既に存在する未登録ファイルも`manual-merged`で内容を保持できる。本書 / `ADOPTION.md`が`UPSTREAM_CHANGED`でlocal未変更なら、`safe-update --confirm`を使える。全判断後に`--apply-plan <plan>`を実行し、別pathへの再scanでprofileの追跡を確認する。詳細はkitの`docs/guides/upgrading.md`を参照する。
+
+追跡外profileも同じ登録→scan→review→applyで修復する。stateは手編集しない。登録前のplanは再生成する。schema 1は先に通常scanでmetadata移行する。profile削除はこのCLIの対象外とする。
+
+stateがない旧projectだけ、従来のfeatureをdry-run / diffして確認後に`--apply`を使う。state移行を行う場合はscanに`--technology-profile`を指定してadoption planへ含める。
 
 ```bash
 node scripts/upgrade-project.mjs \

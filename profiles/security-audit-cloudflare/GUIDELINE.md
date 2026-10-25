@@ -1,0 +1,9 @@
+# Cloudflare Security Audit
+
+標準コード監査のtooling profile。Cloudflare Workersを使わないprojectにも適用できる。
+
+共通security-gateとprojectのSECURITY_ASSURANCE方針を先に読む。profileはkitのadapterと固定source情報を配置するだけで、外部skillやmodel campaignを自動install・起動しない。
+
+承認後の導入にはadapterのprovider-lock.jsonを使う。固定commitの上流skill一式とMIT licenseを取得し、各fileのGit blob digest / sizeを検証する。既存の同名skillを上書きしない。動作確認とagentの認識確認を経て、上流のfull workflowを明示的に起動する。
+
+認可漏れ、tenant分離、自作logicも対象。6段階のscope・coverage・独立検証と両validatorを保ち、足りないsandboxや予算は未確認として報告する。reportのsource_ref / scopeは共通planへ結び付ける。出典の企業名だけで安全性・検出率を保証しない。

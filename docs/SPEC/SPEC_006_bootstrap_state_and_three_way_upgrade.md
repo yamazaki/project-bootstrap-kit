@@ -66,6 +66,8 @@ fingerprintはmanaged pathの存在・file種別・mode・hashとimmutable plan 
 - `add`: NEW_UPSTREAM_PATHを明示confirmして追加する
 - `skip`: NEW_UPSTREAM_PATHを理由付きで意図的に追加しない
 
+`NEW_UPSTREAM_PATH`でもlocal contentが既に存在する場合は、`manual-merged`で確認済みlocalを保持して受け入れられる。専用CLIのcurrent hash検証と逐次統合規則を適用し、ownershipを`managed-merge`とする。localが不存在の場合はこの判断を拒否する。
+
 同じupstream変更はaccepted-deviationまたはmanual-merged後に再通知せず、deferredは再通知する。
 
 ## 8. Three-way evidence
@@ -103,3 +105,15 @@ plan作成はdirty kit checkoutでも許可できるが、complete applyは次�
 - kit checkoutがclean
 - current HEADがplanのkit commitと一致
 - clean HEADから再生成したsnapshotがplan snapshotと一致
+
+## 12. 初期化後のTechnology Profile追加
+
+- schema 2では`--update-technology-profiles --add <id> [--add <id> ...] --reason <text>`で選択の追加をpreviewし、`--apply`時だけstateへ保存する
+- 既存選択との和集合とし、既存順序を保持する。同一追加の再実行はstateを書き換えず`SKIP(SAME)`とする
+- schema、integrity、baseline、profile実在、Model policyとprofile applicabilityを全件検証してから保存する。変更前後、追加ID、理由、日時をstate historyへ記録する
+- identity、AI surface、snapshotAppliedAt、既存kit受入version、path / baseline、feature stateは維持する。人向け初回適用記録を最新選択で書き換えない
+- この操作は文書・skillを配置せず、pathを受け入れない。次のscanがprofileを含むsnapshotを生成し、既存のpath判断・plan applyで受け入れる。登録だけで全pathの追跡完了とは扱わない
+- 追跡外の配置済みprofileも同じ経路で登録・修復する。固有編集はmanual-merged等の明示判断で保持する
+- 登録前のplanはstate digest不一致でstaleとなる。再scanする
+- stateありのtechnology-profiles featureはdry-run / applyとも拒否し、登録CLIへ案内する。stateありscanの`--technology-profile`も拒否し、schema 1ではmetadata移行を先に行う
+- stateなし旧adopterは従来featureまたはprofile指定のadoption planを使う。profile削除・置換とModel / AI surface変更はこの追加操作では扱わない

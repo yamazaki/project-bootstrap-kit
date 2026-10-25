@@ -93,6 +93,18 @@ node scripts/upgrade-project.mjs \
 
 decisionは`manual-merged / accepted-deviation / deferred / safe-update / add / skip`を使用する。safe-updateとaddは`--confirm`を必須とする。
 
+## Technology Profile追加・追跡外修復
+
+schema 2ではstateを手編集せず、次をpreviewする。
+
+```bash
+node scripts/upgrade-project.mjs --target /path/to/adopted --update-technology-profiles --add slack --reason "連携先を追加"
+```
+
+同じcommandへ`--apply`を付けると選択とstate historyだけを更新する。文書・skillの配置・受入は次のscan / plan applyで行う。既存選択とAI surfaceは維持し、追加済みIDの再登録は`SKIP(SAME)`。既存の独自編集は`NEW_UPSTREAM_PATH`でもlocalがあれば`manual-merged`で保持できる。
+
+登録前のplanは再生成する。stateありscanの`--technology-profile`は拒否する。schema 1は先にmetadata移行し、stateなし旧adopterはfeatureまたはprofile指定のadoption planを使用する。詳しい判断とrollbackは[profile追加・修復手順](../guides/upgrading.md#21-進行中projectへのtechnology-profile追加修復)を参照する。
+
 ## Ownership transition
 
 ```bash

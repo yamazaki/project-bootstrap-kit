@@ -57,6 +57,12 @@ const SKILL_README_ENTRIES = [
   "- `knowledge-feedback`: Technology Profileに限らず、文書運用、初期構想、WBS、skill、script、test、運用を含むkit全体の改善知識を抽出する。",
 ];
 
+function assertStatelessTarget(ctx) {
+  if (fs.existsSync(path.join(ctx.targetRoot, "docs", "BOOTSTRAP_STATE.json"))) {
+    throw new Error("technology-profiles feature does not update bootstrap state. Use --update-technology-profiles --add <id> --reason <text> [--apply], then --scan and --apply-plan. Schema 1 must complete metadata migration first.");
+  }
+}
+
 function readIfExists(filePath) {
   return fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf8") : "";
 }
@@ -593,6 +599,7 @@ function printResults(results) {
 }
 
 export function dryRun(ctx) {
+  assertStatelessTarget(ctx);
   if (!ctx.aiSurface) {
     console.log("");
     printSection("Technology Profiles Diff");
@@ -624,6 +631,7 @@ export function dryRun(ctx) {
 }
 
 export function apply(ctx) {
+  assertStatelessTarget(ctx);
   if (!ctx.aiSurface) {
     console.log("");
     printSection("Apply Result");

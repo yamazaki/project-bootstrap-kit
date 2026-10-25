@@ -20,3 +20,5 @@
   - Advisory: [WORK/advisory](./WORK/advisory/)
 - 履歴: [history](./history/)
 - セッション記録: [agent_sessions](./agent_sessions/)
+
+- セキュリティ確認: [SECURITY_ASSURANCE.md](./SECURITY_ASSURANCE.md)（project方針は同名JSON）

@@ -72,7 +72,7 @@ node scripts/init-project.mjs \
 
 - 共通コアと `docs/TECHNOLOGY/INDEX.md`, `ADOPTION.md` を展開する
 - 選択済みprofileはない状態で開始する
-- WORK/0.1で採用技術が確定した後、`technology-profiles` featureで追加できる
+- 採用技術の確定後や実装・運用中も、`--update-technology-profiles --add <id> --reason <text>`のpreview / applyで選択を登録し、通常scan / plan applyで追加できる。stateなし旧projectだけ`technology-profiles` featureを使う
 
 task-workspaceはTechnology Profileを受け付けず、profile基盤文書も生成しない。非対応の組合せは無視せず停止する。
 

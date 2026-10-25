@@ -52,9 +52,10 @@ docs/TECHNOLOGY/
 
 - `--technology-profile` は任意かつ複数回指定できる
 - profile未指定でも新規プロジェクトを開始できる
-- WORK/0.1で採用技術が確定した時点または実装着手判定までに、必要なprofileを追加できる
-- 新規CLIは `--technology-profile` に統一し、`--platform-profile` は受け付けない
-- profile追加は `technology-profiles` upgrade featureでも実行できる
+- WORK/0.1で採用技術が確定した時点、実装・運用の途中に、必要なprofileを追加できる
+- 初期選択のCLIは `--technology-profile` とし、`--platform-profile` は受け付けない
+- schema 2での追加は `--update-technology-profiles --add <id> --reason <text>`をpreview / applyして選択を登録し、通常scan / planで文書・skillを受け入れる。追跡外profileの修復も同じ経路を使う（SPEC_006参照）
+- stateなし旧projectだけ `technology-profiles` upgrade featureを使用できる。schema 1は先にmetadata移行する
 
 ## 7. 継続更新
 

@@ -79,3 +79,7 @@ description: Use when closing a project phase, checking phase completion, archiv
 - session移動前のreference scanで参照切れ候補がないことを確認している
 - resume promptがactive rootに残り、現行計画と一致している
 - セッション記録と再開プロンプトが更新されている
+
+## セキュリティ確認
+
+開始、重要変更、受入、公開・release前は `docs/SECURITY_ASSURANCE.md` と `security-gate` skillで必要な検査を確認する。Cloudflareは標準コード監査、OSVは依存検査。未導入時は具体計画と利用者承認後に導入・監査へ進む。Mantisの導入・実行は明示指示時だけとする。

@@ -374,3 +374,7 @@ skill は補助であり、正本ではない。作業線の正本は `docs/WORK
 - 他リポジトリへknowledge feedbackを自動書き込み、commit、pushしない
 - knowledge feedbackのinternal版をproject-bootstrap-kitへ移送しない
 - 「暗黙の了解」「文脈上問題なさそう」「過去に似た指示があった」などの理由で確定操作を行わない
+
+## セキュリティ確認
+
+開始、重要変更、受入、公開・release前は `docs/SECURITY_ASSURANCE.md` と `security-gate` skillで必要な検査を確認する。Cloudflareは標準コード監査、OSVは依存検査。未導入時は具体計画と利用者承認後に導入・監査へ進む。Mantisの導入・実行は明示指示時だけとする。

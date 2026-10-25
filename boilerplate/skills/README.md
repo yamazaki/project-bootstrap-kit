@@ -13,3 +13,5 @@
 - `maintenance-work`: リリース済み・運用中の既存能力に対する修正をMNTとして扱う。
 - `operations-work`: アラート、ログ、停止、閾値超過、回復確認などの運用上の作業を、障害や修正を前提にせずOPSとして扱う。
 - `experience-advisory`: 本プロジェクトの経験を、他プロジェクトやプロジェクト化前の企画へ活用する助言をADVとして扱う。
+
+- `security-gate`: Cloudflareコード監査とOSV依存検査の計画、承認付き導入、証跡検証と公開判断への接続。Mantisは明示指示時だけ。

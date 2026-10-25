@@ -42,9 +42,9 @@
 - `--technology-profile` は任意かつ複数回指定できる
 - 未指定時も `docs/TECHNOLOGY/INDEX.md` と `ADOPTION.md` を展開し、WORK/0.1中の後付けを可能にする
 - profileは `profile.json`、`GUIDELINE.md`、任意の `REFERENCE.md` と `skills/` で構成する
-- profile追加処理は `init-project.mjs` と `technology-profiles` featureで共通ライブラリを使用する
+- profile配置は共通ライブラリを使う。初期化後のstateful projectでは選択追加CLI→scan / plan applyを使い、stateなし旧projectだけ`technology-profiles` featureを使う
 - 変動するplatform仕様は公式一次情報、プロジェクト固有の採否は `ADOPTION.md` を正本とする
-- 新規CLIは `--technology-profile` に統一し、旧 `--platform-profile` は受け付けない
+- 初期選択のCLIは `--technology-profile` とし、stateful projectでの後付けは`--update-technology-profiles --add`とする。旧 `--platform-profile` は受け付けない
 
 ## 5. Project Model assetの原則
 

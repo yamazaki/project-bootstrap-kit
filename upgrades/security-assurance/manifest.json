@@ -1,0 +1,8 @@
+{
+  "name": "security-assurance",
+  "description": "Add the security gate and project policy without installing external tools or running audits.",
+  "mode": "semi-automatic",
+  "adds": ["docs/SECURITY_ASSURANCE.md", "docs/SECURITY_ASSURANCE.json", ".agents/skills/security-gate/ or .claude/skills/security-gate/"],
+  "patchTargets": ["AGENTS.md", "docs/DEVELOPMENT_GUIDELINE.md", "docs/DOCUMENTATION.md", "docs/INDEX.md", ".gitignore", "docs/BOOTSTRAP_ADOPTION.md"],
+  "notes": ["Use the regular state scan/plan route for stateful adopters.", "Add the two tooling profiles separately through the supported profile-selection workflow.", "External installation and audit require a reviewed plan and human authorization."]
+}

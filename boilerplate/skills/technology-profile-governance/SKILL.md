@@ -29,7 +29,24 @@ description: Use when selecting, adding, reviewing, updating, or applying one or
 
 ## profile追加コマンド
 
-project-bootstrap-kitのcloneで次を実行する。
+project-bootstrap-kitのcloneで実行する。初期構想後、実装・運用の途中でも追加できる。
+
+schema 2の`docs/BOOTSTRAP_STATE.json`がある場合:
+
+```bash
+node scripts/upgrade-project.mjs \
+  --target /path/to/repo \
+  --update-technology-profiles --add <profile-id> \
+  --reason "追加する理由"
+```
+
+preview確認後、同じcommandへ`--apply`を付けてstateの選択を登録する。複数追加は`--add`を繰り返す。AI surfaceはstateから取得する。登録だけでは文書・skillは配置・受入されない。
+
+次に`--target /path/to/repo --scan --plan-output /tmp/profile-addition/plan.json`を実行し、`project-bootstrap-kit-upgrade` skillとkitの`docs/guides/upgrading.md`に従いpathごとの判断→`--apply-plan`→別pathへの確認scanを行う。INDEX / ADOPTIONもprofileを含む想定構成と比較する。新pathは内容確認後に`add --confirm`、既存の独自編集は`manual-merged`で受け入れる。未登録だが既に存在する文書・skillも`manual-merged`で保持できる。
+
+過去のfeature適用で追跡外になったprofileも同じ登録経路で修復する。state / integrityは手編集しない。登録前のplanはstaleになるため再利用しない。schema 1は先に通常scanでmetadata移行する。削除・Model / AI surface変更はこの操作では扱わない。
+
+stateがない旧projectの場合だけ、次を使う。
 
 ```bash
 node scripts/upgrade-project.mjs \
@@ -41,6 +58,8 @@ node scripts/upgrade-project.mjs \
 ```
 
 確認後に `--apply` を付ける。
+
+state移行を同時に行う場合は、`--scan --technology-profile <id>`でprofileを含むadoption planを作る。stateありの通常scanでは`--technology-profile`を受け付けない。
 
 ## 継続更新
 
@@ -54,6 +73,7 @@ node scripts/upgrade-project.mjs \
 ## 完了条件
 
 - 選択済みprofileが `INDEX.md` にある
+- stateありではprofileが選択一覧にあり、文書・skillのpathが受入済みまたは理由付きで保留されている
 - profileの初期採否と未決事項が `ADOPTION.md` にある
 - 必要な一次検証がWBSにある
 - 関連するprofile guidelineを実装前に参照できる

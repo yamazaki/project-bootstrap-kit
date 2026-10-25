@@ -211,3 +211,7 @@ PoC が複数フェーズに跨る場合は、各フェーズを `PoC step 1/2` 
 - UI / Interaction が価値検証に必要な場合、PoC に含まれている
 - 未決事項と事前検証が WBS に反映されている
 - 実装着手可否を利用者が判断できる
+
+## セキュリティ確認
+
+開始、重要変更、受入、公開・release前は `docs/SECURITY_ASSURANCE.md` と `security-gate` skillで必要な検査を確認する。Cloudflareは標準コード監査、OSVは依存検査。未導入時は具体計画と利用者承認後に導入・監査へ進む。Mantisの導入・実行は明示指示時だけとする。

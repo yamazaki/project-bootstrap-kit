@@ -417,3 +417,7 @@ Web GUI があるプロジェクトでは、WBS 分解時にデザインモッ�
 - profileの共通文書をプロジェクト事情で直接変更せず、差異は `ADOPTION.md` に記録する
 - ADR確定、E2E、production運用、障害対応で得た知識を `ADOPTION.md` へ継続反映する
 - 他プロジェクトにも有効な知識は、マイルストーンまたはフェーズのクローズ時にknowledge feedbackとして抽出する
+
+## セキュリティ確認
+
+開始、重要変更、受入、公開・release前は `docs/SECURITY_ASSURANCE.md` と `security-gate` skillで必要な検査を確認する。Cloudflareは標準コード監査、OSVは依存検査。未導入時は具体計画と利用者承認後に導入・監査へ進む。Mantisの導入・実行は明示指示時だけとする。

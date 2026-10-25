@@ -16,7 +16,7 @@
       "name": "skills-sync",
       "contractVersion": 1,
       "introducedIn": "0.1.0",
-      "updatedIn": "0.12.0",
+      "updatedIn": "0.13.0",
       "dependsOn": [
         "skills-surface-migration"
       ],
@@ -51,7 +51,7 @@
       "name": "phase-transition",
       "contractVersion": 1,
       "introducedIn": "0.1.0",
-      "updatedIn": "0.12.0",
+      "updatedIn": "0.13.0",
       "dependsOn": [],
       "selection": "recommended",
       "supportedProjectModels": [
@@ -139,9 +139,9 @@
     },
     {
       "name": "technology-profiles",
-      "contractVersion": 1,
+      "contractVersion": 2,
       "introducedIn": "0.4.0",
-      "updatedIn": "0.12.0",
+      "updatedIn": "0.13.0",
       "dependsOn": [
         "phase-transition",
         "project-bootstrap-planning"
@@ -230,6 +230,17 @@
         "skills-sync"
       ],
       "selection": "manual",
+      "supportedProjectModels": [
+        "development"
+      ]
+    },
+    {
+      "name": "security-assurance",
+      "contractVersion": 1,
+      "introducedIn": "0.13.0",
+      "updatedIn": "0.13.0",
+      "dependsOn": [],
+      "selection": "recommended",
       "supportedProjectModels": [
         "development"
       ]

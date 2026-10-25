@@ -15,7 +15,24 @@
 
 ## Unreleased
 
-現時点で次回release向けの追加対応はない。
+## v0.13.0
+
+### セキュリティ確認
+
+- `security-gate`のSKILLと新しい`references/execution-environments.md`、`docs/SECURITY_ASSURANCE.md`を通常scan / planでreviewする。Claude専用projectでは`.claude/skills/`、bothでは両surfaceへ反映する。stateなしfeatureは不足referenceを追加するが既存skill本文を保持するため、旧skillの環境案内への参照は手動で統合する。独自referenceも上書きしない。Cloudアカウント・外部設定・policy JSON schema・profile versionの変更は不要。
+- Cloudflare reportのmetadataには実際の監査完了ISO時刻`completed_at`を記録する。旧reportの実日時を確認できなければ再監査し、取込時刻を代入して新しく見せない。再取込でも証跡の古さを維持する。
+
+- stateありdevelopmentは新しいclean kitから通常scan / planでsecurity-gate・policy・入口参照を受け入れる。独自security文書や設定はmanual merge等で保持する。
+- `security-audit-cloudflare`と`security-dependencies-osv`は既存のprofile追加登録→scan→plan applyで後付けする。登録だけでは外部toolを導入しない。
+- stateなしの限定導入は`--feature security-assurance --ai-surface <surface> --dry-run --diff`を確認し、承認後にapplyする。未導入toolの固定版取得と監査は共通gateの別planで承認後に行う。
+- Mantisのinstallは通常案内に含めない。raw report・runtime tool・DBはstate baselineへ含めずprivateに保持する。rollbackは導入前のfile / adoption / state / baselineを一体で復元する。
+
+
+- schema 2でprofileを後付けする場合は、`--target <project> --update-technology-profiles --add <id> --reason "理由"`をpreviewし、同じcommandへ`--apply`を付けて選択だけを登録する。複数追加は`--add`を繰り返す。
+- 登録後に通常scanで新profileの文書・skillとTECHNOLOGY INDEX / ADOPTIONの差分をreviewし、path判断後に`--apply-plan`する。配置済みだが追跡外のprofileも同じ経路で修復できる。既存の独自編集は`NEW_UPSTREAM_PATH`でも`manual-merged`で保持できる。`add --confirm`はupstreamを配置するため既存内容との比較を先に行う。
+- stateありの`--feature technology-profiles`はdry-run / applyとも停止する。stateありscanの`--technology-profile`も停止し、登録CLIへ案内する。schema 1は先にmetadata移行する。stateなしの旧projectは従来featureまたはprofileを指定したadoption planを使う。
+- 登録前のplanは再生成する。state / integrityの手編集は行わない。登録だけでは文書・skillの配置や受入を完了しない。詳細は[profile追加・修復手順](docs/guides/upgrading.md#21-進行中projectへのtechnology-profile追加修復)を参照する。
+- 新規案内と2つのskillは通常state upgradeでreviewする。state形式と各profile本体のversionは変更しない。rollbackは登録のみならstateを、plan適用後はstate / baseline / 対象ファイル / 人向け履歴を同じ退避点から復元する。
 
 ## v0.12.0
 

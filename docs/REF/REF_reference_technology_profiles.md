@@ -65,6 +65,21 @@ node scripts/init-project.mjs \
 
 ## 6. 初期化後の追加
 
+WORK/0.1、実装、運用の途中で追加できる。schema 2 stateがある場合は選択登録をpreviewする。
+
+```bash
+node scripts/upgrade-project.mjs \
+  --target /path/to/repo \
+  --update-technology-profiles --add cloudflare-workers \
+  --reason "実装で採用するruntimeを追加"
+```
+
+同じcommandへ`--apply`を付けてstateの選択と履歴だけを更新する。複数追加は`--add`を繰り返す。続いて通常`--scan`し、profile文書・skillとINDEX / ADOPTIONの差分をreviewして`--apply-plan`する。AI surfaceはstateの設定を使う。登録だけでは文書配置・path受入は完了しない。
+
+過去のfeature適用で追跡外になったprofileも同じ経路で修復する。独自編集は既存localがあれば`NEW_UPSTREAM_PATH`でも`manual-merged`で保持できる。stateやintegrityは手編集せず、登録前のplanは再生成する。schema 1は先にmetadata移行する。profile削除はこの操作の対象外。具体的なpath判断とrollbackは[upgrade guide](../guides/upgrading.md#21-進行中projectへのtechnology-profile追加修復)を参照する。
+
+stateありの`technology-profiles` featureとscanの`--technology-profile`は停止し、登録経路へ案内する。**stateなし旧projectだけ**次のfeatureを使用できる。
+
 dry-run:
 
 ```bash
@@ -150,3 +165,7 @@ node scripts/verify-feedback-export.mjs /path/to/kit_feedback_export_yyyymmdd_<n
 - 公式一次情報: `profile.json#officialSources`
 
 Cloudflareのlimits、pricing、Wrangler、runtime仕様は変動するため、REFERENCE内の数値をそのまま採用しない。
+
+## 標準セキュリティtooling
+
+`security-audit-cloudflare`と`security-dependencies-osv`はdevelopment向けの任意tooling profile。共通security-gateは未選択でも不足を案内する。profile配置と外部tool installは別工程。Mantisは通常の未導入確認に含めない。詳細は配布先のSECURITY_ASSURANCE文書を参照する。

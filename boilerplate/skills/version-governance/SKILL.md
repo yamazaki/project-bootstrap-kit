@@ -59,3 +59,7 @@ version 更新判断、更新対象の切り分け、更新手順の確認を再
 - 互換性影響がある場合はupgrade / migration手順が更新されている
 - build、test、必要なE2E、version表示を確認している
 - version確定についてユーザーの承認を得ている
+
+## セキュリティ確認
+
+開始、重要変更、受入、公開・release前は `docs/SECURITY_ASSURANCE.md` と `security-gate` skillで必要な検査を確認する。Cloudflareは標準コード監査、OSVは依存検査。未導入時は具体計画と利用者承認後に導入・監査へ進む。Mantisの導入・実行は明示指示時だけとする。

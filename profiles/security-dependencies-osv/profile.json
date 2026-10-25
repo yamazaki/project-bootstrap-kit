@@ -1,0 +1,11 @@
+{
+  "id": "security-dependencies-osv",
+  "name": "OSV Dependency Scan",
+  "version": "1.0.0",
+  "category": "tooling",
+  "guideline": "GUIDELINE.md",
+  "reference": null,
+  "skills": ["osv-dependency-adapter"],
+  "supportedProjectModels": ["development"],
+  "officialSources": ["https://github.com/google/osv-scanner"]
+}

@@ -1,0 +1,11 @@
+{
+  "id": "security-audit-cloudflare",
+  "name": "Cloudflare Security Audit",
+  "version": "1.0.0",
+  "category": "tooling",
+  "guideline": "GUIDELINE.md",
+  "reference": null,
+  "skills": ["cloudflare-audit-adapter"],
+  "supportedProjectModels": ["development"],
+  "officialSources": ["https://github.com/cloudflare/security-audit-skill"]
+}
