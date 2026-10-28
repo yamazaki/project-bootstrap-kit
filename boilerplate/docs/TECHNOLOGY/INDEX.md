@@ -56,7 +56,7 @@ node scripts/upgrade-project.mjs \
   --plan-output /tmp/profile-addition/plan.json
 ```
 
-`NEW_UPSTREAM_PATH`は内容を確認して`--accept-path-decision <plan> --path <path> --decision add --reason "追加理由" --confirm`で承認する。既存の独自編集は1ファイルずつ統合し、`manual-merged`で受け入れる。既に存在する未登録ファイルも`manual-merged`で内容を保持できる。本書 / `ADOPTION.md`が`UPSTREAM_CHANGED`でlocal未変更なら、`safe-update --confirm`を使える。全判断後に`--apply-plan <plan>`を実行し、別pathへの再scanでprofileの追跡を確認する。詳細はkitの`docs/guides/upgrading.md`を参照する。
+`NEW_UPSTREAM_PATH`は内容を確認して`--accept-path-decision <plan> --path <path> --decision add --reason "追加理由" --confirm`で承認する。既存の独自編集は1ファイルずつ統合し、`manual-merged`で受け入れる。既に存在する未登録ファイルも`manual-merged`で内容を保持できる。同一内容の既存ファイルは`add --confirm`または`manual-merged`で受け入れるとkit-managedとなる。本書 / `ADOPTION.md`がkit-managed / managed-merge / project-ownedの`UPSTREAM_CHANGED`で、localが受入済みupstreamとhash / kind / mode一致なら、`safe-update --confirm`を使える（ownershipは保持）。固有編集を含むmanaged-mergeはmanual-mergedで統合し、project-ownedはmanual-mergedでも保持する。scanのallowedDecisionsとownership復帰候補を確認し、不一致の復帰をstate手編集で代替しない。全判断後に`--apply-plan <plan>`を実行し、別pathへの再scanでprofileの追跡を確認する。詳細はkitの`docs/guides/upgrading.md`を参照する。
 
 追跡外profileも同じ登録→scan→review→applyで修復する。stateは手編集しない。登録前のplanは再生成する。schema 1は先に通常scanでmetadata移行する。profile削除はこのCLIの対象外とする。
 

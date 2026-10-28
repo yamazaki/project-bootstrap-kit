@@ -86,7 +86,9 @@ state-upgradeの受入:
 node scripts/upgrade-project.mjs --accept-path-decision /tmp/project-bootstrap-update/plan.json --path AGENTS.md --decision manual-merged --reason "固有規則を保ち新upstreamを統合"
 ```
 
-state-upgradeではbundleのU0/U1/L1、ownershipとpath stateを確認し、manual-merged / accepted-deviation / deferred / safe-update / add / skipを選ぶ。safe-updateとaddには `--confirm` が必要。accepted-deviationには適切なownershipを確立する。schema間で語彙を混ぜず、状態に合わない判断を無理に通さない。
+state-upgradeではbundleのU0/U1/L1、ownershipとpath stateを確認し、manual-merged / accepted-deviation / deferred / safe-update / add / skipを選ぶ。safe-updateとaddには `--confirm` が必要。safe-updateはkit-managed / managed-merge / project-ownedのUPSTREAM_CHANGEDでlocalが受入済みU0とhash / kind / mode一致する場合だけ使え、ownershipを保持する。UPSTREAM_CHANGEDはL1=L0を示すだけなのでL1=U0も確認する。scanのallowedDecisionsを読み、受入時に拒否された場合は示された選択肢を確認する。accepted-deviationには適切なownershipを確立する。schema間で語彙を混ぜず、状態に合わない判断を無理に通さない。
+
+manual-mergedはkit-managed / managed-mergeのlocalがU1とhash / kind / mode一致ならkit-managed、不一致ならmanaged-mergeとする。project-owned / mapped / intentionally-absentは保持する。CLIの変更前後と適用履歴を確認する。scanのOWNERSHIP_RECOVERY候補をkit-managedへ戻す場合は、管理方針を確認し`--update-path-state --path <path> --ownership kit-managed --reason "理由"`で明示する。受入済みU0との完全一致が必要で、state更新後は再scanする。mapped / intentionally-absentを自動解除しない。
 
 `NEW_UPSTREAM_PATH`でも既存local contentがある場合は`manual-merged`で固有編集を保持して受け入れられる。新pathへ`add --confirm`するとupstreamを配置するため、既存内容との相違を先に確認する。
 

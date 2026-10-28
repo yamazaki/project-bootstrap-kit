@@ -31,7 +31,7 @@ CONFLICTはfile単位で次のresolutionを持つ。
 
 - `unresolved`: 既定値。通常applyを停止する
 - `keep`: target内容を保持する。空でない`reason`を必須とする
-- `replace`: kit snapshotへ置換する。`confirmReplace: true`を必須とする
+- `replace`: kit snapshotへ置換する。`confirmReplace: true`を必須とし、scanの仮ownershipや判断入力経路によらずkit-managedを設定する
 - `manual-merge`: 自動applyせず、手動統合後のplan再生成を求める
 
 schema 2では、明示CLIによるmanual merge受入時だけ指定CONFLICT path自身の変更を許可する。plan記録済みimmutable evidenceと指定外managed pathは従来どおり一致を要求し、受入後にcurrent kind/mode/hashとmanaged fingerprintを更新する。

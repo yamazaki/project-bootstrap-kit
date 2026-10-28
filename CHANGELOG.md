@@ -4,6 +4,13 @@
 
 ### Distribution
 
+## v0.14.0 - 2026-10-28
+
+### Distribution
+
+- state upgradeの判断を受入時にも検証し、scanでpathごとの選択肢とownership復帰候補を表示。旧upstreamと完全一致するmanaged-merge / project-ownedは明示confirmでsafe-updateでき、ownershipを保持する
+- manual-mergedでupstreamと完全一致する通常管理pathはkit-managedとなり、project-owned等の明示方針は保持する。ownershipの変更前後をCLI・履歴へ記録し、受入済みupstreamとの完全一致を条件にkit-managedへ戻す操作を追加。adoption replaceが仮のproject-ownedを引き継ぐ不具合を修正
+
 ## v0.13.0 - 2026-10-26
 
 ### Distribution

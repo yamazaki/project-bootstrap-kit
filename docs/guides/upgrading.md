@@ -54,6 +54,45 @@ ownershipと状態に応じ、safe-update、manual merge、accepted deviation、
 
 `--update-path-state` などでownership/stateを更新した場合は再scanし、新planへ判断する。state更新前のplanをそのまま使うとstaleとして停止する。
 
+
+### ownershipと判断
+
+| ownership | 意味 | `UPSTREAM_CHANGED`でのsafe-update |
+| --- | --- | --- |
+| kit-managed | kitの内容を管理対象にする | L1がU0とhash / kind / mode一致し、`--confirm`ありなら可 |
+| managed-merge | kitとprojectの内容を統合して管理する | 同じ条件で可。ownershipを保持 |
+| project-owned | projectを内容の正本とする | 同じ条件で明示的に可。ownershipを保持 |
+| mapped | 別pathが責務を満たす | 不可。mappingを自動解除しない |
+| intentionally-absent | 理由付きで不存在を維持する | 不可。不在の意図を自動解除しない |
+
+`UPSTREAM_CHANGED`はL1=L0を表すため、それだけでL1=U0とは限らない。scanの各pathに`allowedDecisions`を表示し、受入時とapply時に同じ条件を再検証する。確認不足や不適合な判断はplanへ保存せず、選択肢を示して拒否する。planの選択肢欄を書き換えても適用条件は変わらない。
+
+`manual-merged`は現在のlocalを受け入れる。kit-managed / managed-mergeではlocalがU1とhash / kind / mode一致ならkit-managed、異なるならmanaged-mergeとする。project-ownedは同一内容でも保持する。mapped / intentionally-absentもその宣言を保持する。判断受入時にownershipの変更前後を表示し、適用時にstateと人向け履歴へ残す。
+
+| path state | 判断の候補（上表と存在条件で絞り込む） |
+| --- | --- |
+| CURRENT | 判断不要。ownership復帰は別CLI |
+| UPSTREAM_CHANGED | safe-update / manual-merged / accepted-deviation / deferred |
+| LOCAL_CHANGED | manual-merged / deferred |
+| DIVERGED | manual-merged / accepted-deviation / deferred |
+| NEW_UPSTREAM_PATH | add / skip / manual-merged / deferred |
+
+accepted-deviationはkit-managedでは使えない。addはU1の存在と`--confirm`、skipはlocal不存在、NEW_UPSTREAM_PATHのmanual-mergedはlocal存在を条件とする。safe-updateにも`--confirm`を必須とする。
+
+### kit-managedへの復帰
+
+scanは受入済みupstreamと完全一致するmanaged-merge / project-ownedを、CURRENTも含め`OWNERSHIP_RECOVERY`候補として表示する。候補は自動変更しない。管理方針を確認してpathごとに実行する。
+
+```bash
+node scripts/upgrade-project.mjs --target /path/to/adopted-project \
+  --update-path-state --path .agents/skills/project-bootstrap-kit-upgrade/SKILL.md \
+  --ownership kit-managed --reason "独自編集がなくkit管理へ戻す"
+```
+
+受入済みU0とlocalのhash / kind / modeが一致する場合に限る。現行U1との一致だけでbaselineを更新しない。先に新内容を通常planで受け入れ、必要なら復帰する。stateを更新したら再scanする。内容の書換えは行わず、理由・日時・変更前後・hashを記録する。mapped / intentionally-absentから直接戻す操作は提供しない。
+
+既存の遷移はkit-managed→managed-merge、managed-merge⇔project-owned、intentionally-absent→project-owned / managed-merge、mapped→mapped（参照変更）。本変更でmanaged-merge / project-owned→kit-managedを上記一致条件付きで追加する。
+
 ## 2.1 進行中projectへのTechnology Profile追加・修復
 
 schema 2のstateがある場合は、profile選択の登録をpreviewする。WORK/0.1後や実装・運用の途中でも使用できる。
@@ -74,7 +113,7 @@ node scripts/upgrade-project.mjs --target /path/to/adopted-project --scan --plan
 node scripts/upgrade-project.mjs --accept-path-decision /tmp/profile-addition/plan.json --path docs/TECHNOLOGY/slack/GUIDELINE.md --decision add --reason "guidelineの追加を確認" --confirm
 ```
 
-上記の受入commandは1pathの例である。plan全体を確認して残りのpathも判断する。`add --confirm`は既存local contentもupstreamで置き換えるため、同一内容か確認する。独自編集された既存ファイルは内容を統合・確認して`manual-merged`で保持する。`NEW_UPSTREAM_PATH`でもlocalが存在すれば`manual-merged`を使用できる。INDEX / ADOPTIONがlocal未変更の`UPSTREAM_CHANGED`なら`safe-update --confirm`、独自記録があれば1ファイルずつ`manual-merged`を使う。
+上記の受入commandは1pathの例である。plan全体を確認して残りのpathも判断する。`add --confirm`は既存local contentもupstreamで置き換えるため、同一内容か確認する。独自編集された既存ファイルは内容を統合・確認して`manual-merged`で保持する。`NEW_UPSTREAM_PATH`でもlocalが存在すれば`manual-merged`を使用でき、upstreamと完全一致ならkit-managedとなる。INDEX / ADOPTIONが通常ownershipで`UPSTREAM_CHANGED`かつlocalが受入済みupstreamとhash / kind / mode一致なら`safe-update --confirm`、独自記録があれば1ファイルずつ`manual-merged`を使う。
 
 全path判断後に`--apply-plan /tmp/profile-addition/plan.json`を実行し、別pathの確認scanで受入済みprofileが`CURRENT`になることを確認する。保留は理由付きで残す。baselineと受入hashはこの段階で確立する。
 

@@ -274,7 +274,7 @@ function validateDecisions(plan, targetRoot, safeOnly) {
       if (entry.engineManaged && entry.path === ADOPTION_RELATIVE_PATH) continue;
       if (entry.resolution === "add") {
         if (entry.confirmAdd !== true) throw new Error(`${entry.path}: add requires confirmAdd: true`);
-        entry.ownership ||= "kit-managed";
+        entry.ownership = "kit-managed";
       } else if (entry.resolution === "skip") {
         if (entry.engineManaged) throw new Error(`${entry.path}: engine-managed path cannot be skipped`);
         entry.reason = validateSingleLineReason(entry.reason, entry.path);
@@ -291,7 +291,7 @@ function validateDecisions(plan, targetRoot, safeOnly) {
       } else if (entry.resolution === "replace") {
         if (entry.confirmReplace !== true) throw new Error(`${entry.path}: replace requires confirmReplace: true`);
         if (entry.project.kind === "directory") throw new Error(`${entry.path}: directory conflict requires manual resolution`);
-        entry.ownership ||= "kit-managed";
+        entry.ownership = "kit-managed";
       } else if (entry.resolution === "manual-merged") {
         entry.reason = validateSingleLineReason(entry.reason, entry.path);
         if (!entry.decisionAcceptedAt || entry.acceptedProjectHash !== entryInfo(targetRoot, entry.path).hash) throw new Error(`${entry.path}: use the explicit manual merge acceptance CLI`);

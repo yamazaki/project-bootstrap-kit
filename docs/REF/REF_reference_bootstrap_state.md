@@ -105,6 +105,14 @@ node scripts/upgrade-project.mjs --target /path/to/adopted --update-technology-p
 
 登録前のplanは再生成する。stateありscanの`--technology-profile`は拒否する。schema 1は先にmetadata移行し、stateなし旧adopterはfeatureまたはprofile指定のadoption planを使用する。詳しい判断とrollbackは[profile追加・修復手順](../guides/upgrading.md#21-進行中projectへのtechnology-profile追加修復)を参照する。
 
+## 判断とownership
+
+safe-updateはkit-managed / managed-merge / project-ownedのUPSTREAM_CHANGEDで、localが受入済みU0とhash / kind / mode一致し、`--confirm`がある場合に使える。ownershipは保持する。L1=L0だけでは不十分。mapped / intentionally-absentには許可しない。
+
+manual-mergedはkit-managed / managed-mergeでU1と完全一致ならkit-managed、不一致ならmanaged-merge。project-owned / mapped / intentionally-absentは保持する。CLI、state history、人向け履歴へ変更前後を残す。NEW_UPSTREAM_PATHは既存localが必要で、同一内容ならadd --confirmでもkit-managedとして受け入れられる。
+
+scanはallowedDecisionsとownershipRecoveryCandidateを出力する。受入時・apply時に共通規則で再検証し、planの案内欄は権限の根拠にしない。詳細な[状態・判断表](../guides/upgrading.md#2-状態)を参照する。
+
 ## Ownership transition
 
 ```bash
@@ -115,6 +123,16 @@ node scripts/upgrade-project.mjs \
   --ownership project-owned \
   --reason "Phase計画をproject正本として作成"
 ```
+
+| 遷移 | 条件 |
+| --- | --- |
+| kit-managed → managed-merge | 存在するlocalと理由 |
+| managed-merge ⇔ project-owned | 存在するlocalと理由 |
+| managed-merge / project-owned → kit-managed | localが受入済みU0とhash / kind / mode一致。理由必須 |
+| intentionally-absent → project-owned / managed-merge | localを作成し理由を指定 |
+| mapped → mapped | 存在する相対参照と理由 |
+
+scanはCURRENTも含めkit-managedへの復帰候補を表示するが自動変更しない。上記CLIで`--ownership kit-managed`を明示する。現行U1だけとの一致を根拠にbaselineを進めず、通常planで受け入れてから復帰する。復帰後は再scanする。
 
 mapped reference変更には`--satisfied-by`または`--superseded-by`を指定する。
 

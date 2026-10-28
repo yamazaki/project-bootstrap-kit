@@ -45,6 +45,8 @@ upstream contentだけを`.project-bootstrap/baselines/sha256/<hash>`へexact by
 
 ownership変更はstate直接編集ではなく、許可された遷移を行うCLIで理由、current project hash、upstream hash、日時をhistoryへ記録する。
 
+managed-merge / project-ownedからkit-managedへの明示復帰は、localと受入済みU0のhash / kind / mode一致を条件とする。scanはCURRENTも含め復帰候補を表示する。復帰はbaselineやproject contentを変更せず、state変更後は再scanする。mapped / intentionally-absentは直接の復帰対象としない。
+
 ## 6. Path state
 
 | 条件 | 状態 |
@@ -59,14 +61,16 @@ fingerprintはmanaged pathの存在・file種別・mode・hashとimmutable plan 
 
 ## 7. Upgrade decisions
 
-- `safe-update`: kit-managed、local未変更、明示confirm時だけU1を配置する
+- `safe-update`: kit-managed / managed-merge / project-ownedのUPSTREAM_CHANGEDで、localが受入済みU0とhash / kind / mode一致し、明示confirm時だけU1を配置する。ownershipは保持する
 - `manual-merged`: current localを明示CLIでhash検証して受け入れる
 - `accepted-deviation`: review済みで反映しない。U0をU1へ進め、L0をcurrent localへ進める
 - `deferred`: 判断保留。U0/L0を進めず、次回scanでも表示する
 - `add`: NEW_UPSTREAM_PATHを明示confirmして追加する
 - `skip`: NEW_UPSTREAM_PATHを理由付きで意図的に追加しない
 
-`NEW_UPSTREAM_PATH`でもlocal contentが既に存在する場合は、`manual-merged`で確認済みlocalを保持して受け入れられる。専用CLIのcurrent hash検証と逐次統合規則を適用し、ownershipを`managed-merge`とする。localが不存在の場合はこの判断を拒否する。
+`NEW_UPSTREAM_PATH`でもlocal contentが既に存在する場合は、`manual-merged`で確認済みlocalを保持して受け入れられる。専用CLIのcurrent hash検証と逐次統合規則を適用し、ownershipはkit-managed / managed-mergeならlocalとU1のhash / kind / mode一致時にkit-managed、不一致時にmanaged-mergeとする。project-owned / mapped / intentionally-absentは宣言を保持する。localが不存在の場合はこの判断を拒否する。
+
+受入時とapply時に同じ判断規則を検証し、使えない判断はplan保存前に選択肢を示して拒否する。scanのallowedDecisionsは案内用であり、適用時は再計算する。manual-mergedのownership決定規則は既存pathにも適用し、受入CLI、state history、人向け履歴へ変更前後を残す。
 
 同じupstream変更はaccepted-deviationまたはmanual-merged後に再通知せず、deferredは再通知する。
 

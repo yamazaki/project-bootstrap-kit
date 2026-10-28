@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import { acceptAdoptionManualMerge, setAdoptionDecisions } from "./adoption-plan-lib.mjs";
 import { acceptUpgradeDecision, updatePathOwnership } from "./bootstrap-upgrade-state-lib.mjs";
 import { scanUpgradeTarget, applyUpgradePlan } from "./upgrade-plan-lib.mjs";
-import { entryInfo, readAndValidateBootstrapState, walkDistributionFiles } from "./bootstrap-state-lib.mjs";
+import { entryInfo, readAndValidateBootstrapState, walkDistributionFiles, writeBootstrapState } from "./bootstrap-state-lib.mjs";
 import { applyTechnologyProfiles } from "./technology-profile-lib.mjs";
 
 const sourceRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -441,6 +441,156 @@ try {
       acceptUpgradeDecision({ rootDir: kit, planPath: sequentialState, relativePath: p, decision: "manual-merged", reason: "merged" });
     }
     applyUpgradePlan({ rootDir: kit, planPath: sequentialState });
+  });
+  // Ownership recovery and decision validation share one content/kind/mode policy.
+  const recovery = target("ownership-recovery"); fresh(recovery, "both");
+  const recoveryState = path.join(recovery, "docs/BOOTSTRAP_STATE.json");
+  const recoveryPaths = ["AGENTS.md", "docs/DOCUMENTATION.md", "docs/TECHNOLOGY/INDEX.md", "docs/TECHNOLOGY/ADOPTION.md"];
+  const setOwner = (p, ownership) => updatePathOwnership({ rootDir: kit, targetRoot: recovery, relativePath: p, ownership, reason: "reviewed policy" });
+  for (const p of recoveryPaths) setOwner(p, "managed-merge");
+  setOwner(recoveryPaths[1], "project-owned");
+  setOwner(recoveryPaths[3], "project-owned");
+  check("recovery lists CURRENT paths, restores exact baseline only and invalidates old plans", () => {
+    const planPath = path.join(temp, "recovery-before.json");
+    const output = cli(["--target", recovery, "--scan", "--plan-output", planPath]);
+    assert.match(output, /OWNERSHIP_RECOVERY/u);
+    assert(json(planPath).paths.find((p) => p.path === "AGENTS.md").ownershipRecoveryCandidate);
+    for (const p of recoveryPaths.slice(0, 2)) {
+      const content = fs.readFileSync(path.join(recovery, p));
+      setOwner(p, "kit-managed");
+      const state = json(recoveryState);
+      assert.equal(state.paths.find((entry) => entry.path === p).ownership, "kit-managed");
+      assert.equal(state.history.at(-1).to, "kit-managed");
+      assert.deepEqual(fs.readFileSync(path.join(recovery, p)), content);
+      setOwner(p, "managed-merge");
+    }
+    setOwner(recoveryPaths[1], "project-owned");
+    assert.match(cli(["--apply-plan", planPath], 1), /state changed/u);
+  });
+  check("recovery rejects differing content, mode, kind and absence without modifying state", () => {
+    const p = "AGENTS.md", file = path.join(recovery, p), bytes = fs.readFileSync(file), mode = fs.statSync(file).mode & 0o777;
+    const before = fs.readFileSync(recoveryState);
+    const reject = () => {
+      assert.throws(() => setOwner(p, "kit-managed"), /match accepted upstream/u);
+      assert.deepEqual(fs.readFileSync(recoveryState), before);
+    };
+    fs.appendFileSync(file, "local edit"); reject(); fs.writeFileSync(file, bytes);
+    fs.chmodSync(file, mode ^ 0o100); reject(); fs.chmodSync(file, mode);
+    fs.unlinkSync(file); fs.symlinkSync("docs/INDEX.md", file); reject(); fs.unlinkSync(file);
+    reject(); fs.writeFileSync(file, bytes); fs.chmodSync(file, mode);
+  });
+  const policyTarget = target("accepted-local-policy"); fresh(policyTarget);
+  fs.appendFileSync(path.join(policyTarget, recoveryPaths[0]), "\nPreviously accepted custom content\n");
+  fs.chmodSync(path.join(policyTarget, recoveryPaths[1]), 0o755);
+  for (const p of recoveryPaths.slice(0, 2)) updatePathOwnership({ rootDir: kit, targetRoot: policyTarget, relativePath: p, ownership: "managed-merge", reason: "accept project differences" });
+  // Test fixture declarations model mapped and intentionally absent adoption outcomes.
+  const policyState = json(path.join(policyTarget, "docs/BOOTSTRAP_STATE.json"));
+  Object.assign(policyState.paths.find((p) => p.path === recoveryPaths[2]), { ownership: "mapped", satisfiedBy: "docs/INDEX.md" });
+  fs.unlinkSync(path.join(policyTarget, recoveryPaths[3]));
+  Object.assign(policyState.paths.find((p) => p.path === recoveryPaths[3]), { ownership: "intentionally-absent", acceptedProjectHash: null, acceptedProjectKind: "absent", acceptedProjectMode: null });
+  writeBootstrapState(policyTarget, policyState);
+  // Change four upstream paths without touching the local files.
+  for (const p of recoveryPaths) {
+    const source = path.join(kit, "boilerplate", p === "AGENTS.md" ? "_AGENTS.md" : p);
+    fs.appendFileSync(source, "\nOwnership regression upstream addition\n");
+  }
+  git(["add", "."]); git(["-c", "user.name=Kit Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "ownership upstream fixture"]);
+  check("UPSTREAM_CHANGED alone cannot overwrite accepted custom bytes/mode or declared mapping/absence", () => {
+    const pp = path.join(temp, "policy-plan.json"); cli(["--target", policyTarget, "--scan", "--plan-output", pp]);
+    const before = snapshot(policyTarget), planBytes = fs.readFileSync(pp), stateBytes = fs.readFileSync(path.join(policyTarget, "docs/BOOTSTRAP_STATE.json"));
+    for (const p of recoveryPaths) {
+      const item = json(pp).paths.find((entry) => entry.path === p);
+      assert.equal(item.state, "UPSTREAM_CHANGED"); assert(!item.allowedDecisions.includes("safe-update")); assert(!item.ownershipRecoveryCandidate);
+      assert.match(cli(["--accept-path-decision", pp, "--path", p, "--decision", "safe-update", "--confirm", "--reason", "invalid"], 1), /Allowed decisions/u);
+      assert.match(cli(["--target", policyTarget, "--update-path-state", "--path", p, "--ownership", "kit-managed", "--reason", "invalid"], 1), /match accepted upstream|Unsupported ownership/u);
+    }
+    assert.deepEqual(snapshot(policyTarget), before); assert.deepEqual(fs.readFileSync(pp), planBytes);
+    assert.deepEqual(fs.readFileSync(path.join(policyTarget, "docs/BOOTSTRAP_STATE.json")), stateBytes);
+    for (const p of recoveryPaths) cli(["--accept-path-decision", pp, "--path", p, "--decision", "manual-merged", "--reason", "preserve policy"]);
+    cli(["--apply-plan", pp]);
+    const after = json(path.join(policyTarget, "docs/BOOTSTRAP_STATE.json"));
+    assert.deepEqual(recoveryPaths.map((p) => after.paths.find((entry) => entry.path === p).ownership), ["managed-merge", "managed-merge", "mapped", "intentionally-absent"]);
+  });
+  const recoveryPlan = path.join(temp, "recovery-upgrade.json");
+  cli(["--target", recovery, "--scan", "--plan-output", recoveryPlan]);
+  const acceptRecovery = (p, decision, confirm = true) => cli(["--accept-path-decision", recoveryPlan, "--path", p, "--decision", decision, "--reason", "reviewed update", ...(confirm ? ["--confirm"] : [])]);
+  check("invalid decisions fail at acceptance with choices and leave plan and target unchanged", () => {
+    const before = fs.readFileSync(recoveryPlan), targetBefore = snapshot(recovery);
+    for (const [decision, confirm] of [["add", true], ["skip", true], ["safe-update", false]]) {
+      const output = cli(["--accept-path-decision", recoveryPlan, "--path", "AGENTS.md", "--decision", decision, "--reason", "invalid", ...(confirm ? ["--confirm"] : [])], 1);
+      assert.match(output, /Allowed decisions/u);
+      assert.deepEqual(fs.readFileSync(recoveryPlan), before);
+      assert.deepEqual(snapshot(recovery), targetBefore);
+    }
+  });
+  check("managed and project ownership take safe updates without copying by hand", () => {
+    for (const p of recoveryPaths.slice(0, 2)) {
+      const item = json(recoveryPlan).paths.find((entry) => entry.path === p);
+      assert.equal(item.state, "UPSTREAM_CHANGED"); assert(item.allowedDecisions.includes("safe-update"));
+      assert.match(acceptRecovery(p, "safe-update"), new RegExp(`${item.ownership} -> ${item.ownership}`, "u"));
+    }
+  });
+  check("identical manual acceptance restores managed ownership but preserves project policy", () => {
+    for (const p of recoveryPaths.slice(2)) {
+      fs.copyFileSync(path.join(`${recoveryPlan}.bundle`, "snapshot", p), path.join(recovery, p));
+      const before = json(recoveryPlan).paths.find((entry) => entry.path === p).ownership;
+      const expected = before === "project-owned" ? before : "kit-managed";
+      assert.match(acceptRecovery(p, "manual-merged"), new RegExp(`${before} -> ${expected}`, "u"));
+    }
+    cli(["--apply-plan", recoveryPlan]);
+    const state = json(recoveryState);
+    for (const [i, p] of recoveryPaths.entries()) {
+      assert.equal(state.paths.find((entry) => entry.path === p).ownership, ["managed-merge", "project-owned", "kit-managed", "project-owned"][i]);
+      const history = state.history.at(-1).decisions.find((entry) => entry.path === p);
+      assert.equal(history.ownershipTo, state.paths.find((entry) => entry.path === p).ownership);
+    }
+    assert.match(fs.readFileSync(path.join(recovery, "docs/BOOTSTRAP_ADOPTION.md"), "utf8"), /managed-merge -> kit-managed/u);
+    const rerun = path.join(temp, "recovery-rerun.json"); cli(["--target", recovery, "--scan", "--plan-output", rerun]);
+    assert(json(rerun).paths.every((entry) => entry.state === "CURRENT"));
+  });
+  check("safe-update rejects local divergence even when forged allowedDecisions says otherwise", () => {
+    const file = path.join(recovery, "AGENTS.md"); fs.appendFileSync(file, "\nProject-specific rule\n");
+    const pp = path.join(temp, "invalid-safe.json"); cli(["--target", recovery, "--scan", "--plan-output", pp]);
+    const original = fs.readFileSync(pp), targetBefore = snapshot(recovery);
+    const output = cli(["--accept-path-decision", pp, "--path", "AGENTS.md", "--decision", "safe-update", "--confirm", "--reason", "invalid"], 1);
+    assert.match(output, /Allowed decisions/u); assert.deepEqual(fs.readFileSync(pp), original);
+    const forged = json(pp), item = forged.paths.find((entry) => entry.path === "AGENTS.md");
+    item.allowedDecisions = ["safe-update"]; item.decision = "safe-update"; item.confirmUpdate = true; item.reason = "forged advice";
+    writeJson(pp, forged); assert.match(cli(["--apply-plan", pp], 1), /not valid/u);
+    assert.deepEqual(snapshot(recovery), targetBefore);
+    fs.writeFileSync(pp, original);
+    assert.match(cli(["--accept-path-decision", pp, "--path", "AGENTS.md", "--decision", "manual-merged", "--reason", "preserve local rules"]), /managed-merge -> managed-merge/u);
+    cli(["--apply-plan", pp]); assert.match(fs.readFileSync(file, "utf8"), /Project-specific rule/u);
+  });
+  check("new identical profile content stays kit-managed; custom content becomes managed-merge", () => {
+    const dir = target("identical-profile"); fresh(dir);
+    cli(["--target", dir, "--update-technology-profiles", "--add", "cloudflare-workers", "--reason", "existing profile", "--apply"]);
+    for (const name of ["GUIDELINE.md", "REFERENCE.md"]) {
+      const to = path.join(dir, "docs/TECHNOLOGY/cloudflare-workers", name); fs.mkdirSync(path.dirname(to), { recursive: true });
+      fs.copyFileSync(path.join(kit, "profiles/cloudflare-workers", name), to);
+      if (name === "REFERENCE.md") fs.appendFileSync(to, "\nCustom project rule\n");
+    }
+    const pp = path.join(temp, "identical-profile.json"); cli(["--target", dir, "--scan", "--plan-output", pp]);
+    for (const item of json(pp).paths.filter((p) => p.state !== "CURRENT")) {
+      const decision = item.state === "NEW_UPSTREAM_PATH" ? item.local.exists ? "manual-merged" : "add" : "safe-update";
+      cli(["--accept-path-decision", pp, "--path", item.path, "--decision", decision, "--reason", "reviewed profile", "--confirm"]);
+    }
+    cli(["--apply-plan", pp]);
+    const state = json(path.join(dir, "docs/BOOTSTRAP_STATE.json"));
+    assert.equal(state.paths.find((p) => p.path === "docs/TECHNOLOGY/cloudflare-workers/GUIDELINE.md").ownership, "kit-managed");
+    assert.equal(state.paths.find((p) => p.path === "docs/TECHNOLOGY/cloudflare-workers/REFERENCE.md").ownership, "managed-merge");
+  });
+  check("direct adoption replace normalizes provisional project-owned to kit-managed", () => {
+    const dir = target("direct-replace"); fs.writeFileSync(path.join(dir, "AGENTS.md"), "old guidance\n");
+    const pp = path.join(temp, "direct-replace.json");
+    command(process.execPath, [path.join(kit, "scripts/init-project.mjs"), "--target", dir, "--adopt-existing", "--project-name", "Current Project", "--project-slug", "current-project", "--ai-surface", "codex", "--plan-output", pp]);
+    const plan = json(pp); assert.equal(plan.files.find((p) => p.path === "AGENTS.md").ownership, "project-owned");
+    for (const entry of plan.files) {
+      if (entry.status === "ADD") { entry.resolution = "add"; entry.confirmAdd = true; }
+      if (entry.status === "CONFLICT") { entry.resolution = "replace"; entry.confirmReplace = true; }
+    }
+    writeJson(pp, plan); cli(["--apply-plan", pp]);
+    assert.equal(json(path.join(dir, "docs/BOOTSTRAP_STATE.json")).paths.find((p) => p.path === "AGENTS.md").ownership, "kit-managed");
   });
   check("fresh bootstrap includes workflow for all four AI surfaces", () => {
     for (const surface of ["codex", "claude", "both", "rovo"]) {

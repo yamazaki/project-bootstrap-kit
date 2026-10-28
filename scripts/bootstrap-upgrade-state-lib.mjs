@@ -93,6 +93,44 @@ function writeThreeWayEvidence(targetRoot, snapshot, planPath, item) {
   return path.relative(path.dirname(planPath), evidenceRoot);
 }
 
+// Ownership is a policy; content equality also includes kind and permission bits.
+function matchesEntry(local, hash, kind, mode) {
+  return Boolean(hash) && local.hash === hash && local.kind === kind && local.mode === mode;
+}
+
+function canRestoreOwnership(ownership, local, previous) {
+  return ["managed-merge", "project-owned"].includes(ownership)
+    && matchesEntry(local, previous?.acceptedUpstreamHash, previous?.upstreamKind, previous?.upstreamMode);
+}
+
+function pathOwnership(item) { return item.previous?.ownership ?? item.ownership; }
+
+function decisionOwnership(item) {
+  const ownership = pathOwnership(item);
+  if (item.decision === "skip") return "intentionally-absent";
+  if (item.decision !== "manual-merged" || !["kit-managed", "managed-merge"].includes(ownership)) return ownership;
+  return matchesEntry(item.local, item.U1, item.upstream.kind, item.upstream.mode) ? "kit-managed" : "managed-merge";
+}
+
+function allowedDecisions(item) {
+  const ownership = pathOwnership(item);
+  const byState = {
+    UPSTREAM_CHANGED: ["safe-update", "manual-merged", "accepted-deviation", "deferred"],
+    LOCAL_CHANGED: ["manual-merged", "deferred"],
+    DIVERGED: ["manual-merged", "accepted-deviation", "deferred"],
+    NEW_UPSTREAM_PATH: ["add", "skip", "manual-merged", "deferred"],
+  };
+  return (byState[item.state] ?? []).filter((decision) => {
+    if (decision === "safe-update") return ["kit-managed", "managed-merge", "project-owned"].includes(ownership)
+      && matchesEntry(item.local, item.U0, item.previous?.upstreamKind, item.previous?.upstreamMode) && Boolean(item.U1);
+    if (decision === "accepted-deviation") return ownership !== "kit-managed";
+    if (decision === "add") return Boolean(item.U1);
+    if (decision === "skip") return !item.local.exists;
+    if (decision === "manual-merged" && item.state === "NEW_UPSTREAM_PATH") return item.local.exists;
+    return true;
+  });
+}
+
 export function scanStateUpgrade({ rootDir, targetRoot, planOutput }) {
   const { state, contract } = readAndValidateBootstrapState(targetRoot, rootDir);
   const outputPath = path.resolve(planOutput || defaultPlanPath(targetRoot));
@@ -175,7 +213,11 @@ export function scanStateUpgrade({ rootDir, targetRoot, planOutput }) {
       humanRecordCorrection: legacyHumanRecordCorrection(targetRoot, state),
       warnings: kitGit.clean ? [] : ["Plan uses a dirty kit checkout; apply requires a clean matching HEAD."],
     };
-    for (const item of plan.paths) item.threeWayEvidence = writeThreeWayEvidence(targetRoot, expectedRoot, outputPath, item);
+    for (const item of plan.paths) {
+      item.threeWayEvidence = writeThreeWayEvidence(targetRoot, expectedRoot, outputPath, item);
+      item.allowedDecisions = allowedDecisions(item);
+      item.ownershipRecoveryCandidate = canRestoreOwnership(item.ownership, item.local, item.previous);
+    }
     plan.managedFingerprint = fingerprint(plan, targetRoot);
     fs.writeFileSync(outputPath, `${JSON.stringify(plan, null, 2)}\n`, "utf8");
     const counts = new Map();
@@ -183,7 +225,8 @@ export function scanStateUpgrade({ rootDir, targetRoot, planOutput }) {
     console.log("\n========================================\n Bootstrap State Upgrade Scan\n========================================");
     console.log(`Target:       ${targetRoot}\nFrom Kit:     ${state.kit.version}\nTo Kit:       ${kitVersion}\nKit Commit:   ${kitGit.commit}${kitGit.clean ? "" : " (dirty)"}`);
     for (const key of ["CURRENT", "UPSTREAM_CHANGED", "LOCAL_CHANGED", "DIVERGED", "NEW_UPSTREAM_PATH"]) console.log(`${key}: ${counts.get(key) ?? 0}`);
-    for (const item of plan.paths.filter((entry) => entry.state !== "CURRENT")) console.log(`[${item.state}] [${item.ownership}] ${item.path}`);
+    for (const item of plan.paths.filter((entry) => entry.state !== "CURRENT")) console.log(`[${item.state}] [${item.ownership}] ${item.path} allowed=${item.allowedDecisions.join(",")}`);
+    for (const item of plan.paths.filter((entry) => entry.ownershipRecoveryCandidate)) console.log(`[OWNERSHIP_RECOVERY] [${item.ownership}->kit-managed] ${item.path} (matches accepted upstream; use --update-path-state)`);
     if (plan.humanRecordCorrection) console.log("[CORRECTION] Replace the v0.8.2 synthetic timestamp in human-readable adoption records.");
     console.log(`Plan file: ${outputPath}`);
     return { plan, outputPath };
@@ -210,7 +253,10 @@ function validatePlan(plan, planPath, rootDir, allowChangedPath = null) {
     if (JSON.stringify(entryInfo(targetRoot, "docs/TECHNOLOGY/ADOPTION.md")) !== JSON.stringify(plan.humanRecordCorrection.technologyEvidence)) throw new Error("Technology adoption record changed after upgrade scan.");
   }
   for (const item of plan.paths) {
+    const previous = state.paths.find((entry) => entry.path === item.path) ?? null;
+    if (JSON.stringify(item.previous) !== JSON.stringify(previous)) throw new Error(`Upgrade previous state evidence changed: ${item.path}`);
     const upstream = entryInfo(snapshotPath(planPath), item.path);
+    if (JSON.stringify(upstream) !== JSON.stringify(item.upstream)) throw new Error(`Upgrade upstream evidence changed: ${item.path}`);
     if (upstream.hash !== item.U1 || (item.path !== allowChangedPath && entryInfo(targetRoot, item.path).hash !== item.L1)) {
       const manual = item.decision === "manual-merged" && item.acceptedProjectHash === entryInfo(targetRoot, item.path).hash;
       if (!manual) throw new Error(`Upgrade evidence changed: ${item.path}. Manual merge must proceed one file at a time: edit one file, accept it, then edit the next. Preserve your edits before recreating a stale plan.`);
@@ -227,7 +273,7 @@ export function acceptUpgradeDecision({ rootDir, planPath, relativePath, decisio
   if (!["manual-merged", "accepted-deviation", "deferred", "safe-update", "add", "skip"].includes(decision)) throw new Error(`Unsupported decision: ${decision}`);
   const item = plan.paths.find((entry) => entry.path === relativePath);
   if (!item || item.state === "CURRENT") throw new Error(`Path is not reviewable: ${relativePath}`);
-  if (decision === "manual-merged" && item.state === "NEW_UPSTREAM_PATH" && !entryInfo(targetRoot, relativePath).exists) throw new Error(`${relativePath}: manual-merged for a new upstream path requires existing local content`);
+  if (decision === "manual-merged" && item.state === "NEW_UPSTREAM_PATH" && !entryInfo(targetRoot, relativePath).exists) throw new Error(`${relativePath}: manual-merged for a new upstream path requires existing local content. Allowed decisions: ${allowedDecisions(item).join(", ")}`);
   item.reason = validateSingleLineReason(reason, relativePath);
   item.decision = decision;
   item.decisionAcceptedAt = new Date().toISOString();
@@ -235,14 +281,20 @@ export function acceptUpgradeDecision({ rootDir, planPath, relativePath, decisio
     item.acceptedProjectHash = entryInfo(targetRoot, relativePath).hash;
     item.L1 = item.acceptedProjectHash;
     item.local = entryInfo(targetRoot, relativePath);
-    item.ownership = "managed-merge";
   }
   if (decision === "safe-update") item.confirmUpdate = confirm;
   if (decision === "add") item.confirmAdd = confirm;
-  if (decision === "skip") item.ownership = "intentionally-absent";
   if (!contract.pathDecisionValues.includes(decision)) throw new Error(`Decision is not in distribution contract: ${decision}`);
+  // Use the apply rules now, before saving even a single invalid decision.
+  try { validateDecisions({ ...plan, paths: [item] }); }
+  catch (error) {
+    if (error.message.includes("Allowed decisions:")) throw error;
+    throw new Error(`${error.message}. Allowed decisions: ${allowedDecisions(item).join(", ")}`);
+  }
+  item.allowedDecisions = allowedDecisions(item);
   plan.managedFingerprint = fingerprint(plan, targetRoot);
   fs.writeFileSync(resolved, `${JSON.stringify(plan, null, 2)}\n`, "utf8");
+  console.log(`Ownership for ${item.path}: ${pathOwnership(item)} -> ${decisionOwnership(item)}`);
   return plan;
 }
 
@@ -256,18 +308,12 @@ function validateDecisions(plan) {
       item.reason = validateSingleLineReason(item.reason, item.path);
       warnings.push(...reasonWarnings(item.reason, item.path));
     }
-    if (item.decision === "safe-update" && (item.ownership !== "kit-managed" || item.state !== "UPSTREAM_CHANGED")) throw new Error(`${item.path}: safe-update is only valid for unchanged local kit-managed paths`);
     if ((item.decision === "safe-update" || item.decision === "add") && !item.U1) throw new Error(`${item.path}: ${item.decision} requires current upstream content`);
-    if (item.decision === "accepted-deviation" && item.ownership === "kit-managed") throw new Error(`${item.path}: kit-managed paths must transition ownership or use manual-merged before accepting a deviation`);
+    if (item.decision === "accepted-deviation" && pathOwnership(item) === "kit-managed") throw new Error(`${item.path}: kit-managed paths must transition ownership or use manual-merged before accepting a deviation`);
     if (item.decision === "manual-merged" && (!item.decisionAcceptedAt || item.acceptedProjectHash !== entryInfo(plan.target, item.path).hash)) throw new Error(`${item.path}: manual merge was not accepted against current local content`);
     if (item.decision === "manual-merged" && item.state === "NEW_UPSTREAM_PATH" && !entryInfo(plan.target, item.path).exists) throw new Error(`${item.path}: manual-merged for a new upstream path requires existing local content`);
-    const allowedByState = {
-      UPSTREAM_CHANGED: ["safe-update", "manual-merged", "accepted-deviation", "deferred"],
-      LOCAL_CHANGED: ["manual-merged", "deferred"],
-      DIVERGED: ["manual-merged", "accepted-deviation", "deferred"],
-      NEW_UPSTREAM_PATH: ["add", "skip", "manual-merged", "deferred"],
-    };
-    if (!allowedByState[item.state]?.includes(item.decision)) throw new Error(`${item.path}: ${item.decision} is not valid for ${item.state}`);
+    const allowed = allowedDecisions({ ...item, local: entryInfo(plan.target, item.path) });
+    if (!allowed.includes(item.decision)) throw new Error(`${item.path}: ${item.decision} is not valid for ${item.state} / ${item.ownership}. Allowed decisions: ${allowed.join(", ")}`);
   }
   return warnings;
 }
@@ -335,7 +381,7 @@ function applyStateDecisions({ targetRoot, snapshot, correctedSnapshot, plan, st
       byPath.set(item.path, {
         ...previous,
         path: item.path,
-        ownership: item.decision === "manual-merged" ? "managed-merge" : item.decision === "skip" ? "intentionally-absent" : item.ownership,
+        ownership: decisionOwnership(item),
         acceptedKitVersion: plan.kit.version,
         acceptedKitCommit: plan.kit.commit,
         acceptedUpstreamHash: baseline.hash,
@@ -356,7 +402,7 @@ function applyStateDecisions({ targetRoot, snapshot, correctedSnapshot, plan, st
   if (preflight) return;
   state.kit = { name: "project-bootstrap-kit", version: plan.kit.version, commit: plan.kit.commit };
   state.features = structuredClone(plan.features);
-  state.history.push({ at: now, operation: "state-upgrade", kitVersion: plan.kit.version, kitCommit: plan.kit.commit, decisions: plan.paths.filter((item) => item.state !== "CURRENT").map((item) => ({ path: item.path, decision: item.decision, reason: item.reason })) });
+  state.history.push({ at: now, operation: "state-upgrade", kitVersion: plan.kit.version, kitCommit: plan.kit.commit, decisions: plan.paths.filter((item) => item.state !== "CURRENT").map((item) => ({ path: item.path, decision: item.decision, reason: item.reason, ownershipFrom: pathOwnership(item), ownershipTo: item.decision === "deferred" ? pathOwnership(item) : decisionOwnership(item) })) });
   const hasDeferred = plan.paths.some((item) => item.state !== "CURRENT" && item.decision === "deferred");
   for (const feature of Object.values(state.features)) {
     if (hasDeferred) feature.state = "pending-review";
@@ -365,7 +411,7 @@ function applyStateDecisions({ targetRoot, snapshot, correctedSnapshot, plan, st
   writeBootstrapState(targetRoot, state);
   const adoptionPath = path.join(targetRoot, "docs", "BOOTSTRAP_ADOPTION.md");
   if (entryExists(adoptionPath)) {
-    const decisions = plan.paths.filter((item) => item.state !== "CURRENT").map((item) => `  - ${item.path}: ${item.decision}${item.reason ? ` - ${item.reason}` : ""}`).join("\n");
+    const decisions = plan.paths.filter((item) => item.state !== "CURRENT").map((item) => `  - ${item.path}: ${item.decision} [ownership: ${pathOwnership(item)} -> ${decisionOwnership(item)}]${item.reason ? ` - ${item.reason}` : ""}`).join("\n");
     fs.appendFileSync(adoptionPath, `\n## State Upgrade ${now}\n\n- Kit Version: ${plan.kit.version}\n- Kit Commit: ${plan.kit.commit}\n- Decisions:\n${decisions || "  - none"}\n`, "utf8");
   }
 }
@@ -433,6 +479,7 @@ export function applyStateUpgrade({ rootDir, planPath }) {
 const ALLOWED_TRANSITIONS = new Set([
   "intentionally-absent->project-owned", "intentionally-absent->managed-merge", "mapped->mapped",
   "project-owned->managed-merge", "kit-managed->managed-merge", "managed-merge->project-owned",
+  "project-owned->kit-managed", "managed-merge->kit-managed",
 ]);
 
 export function updatePathOwnership({ rootDir, targetRoot, relativePath, ownership, reason, satisfiedBy, supersededBy }) {
@@ -444,6 +491,7 @@ export function updatePathOwnership({ rootDir, targetRoot, relativePath, ownersh
   const nextReason = validateSingleLineReason(reason, relativePath);
   const current = entryInfo(targetRoot, relativePath);
   if (["project-owned", "managed-merge"].includes(ownership) && !current.exists) throw new Error(`${relativePath}: target path must exist for ${ownership}`);
+  if (ownership === "kit-managed" && !canRestoreOwnership(item.ownership, current, item)) throw new Error(`${relativePath}: kit-managed requires local hash, kind and mode to match accepted upstream`);
   const mappedReference = satisfiedBy || supersededBy;
   if (ownership === "mapped") {
     if (!mappedReference || path.isAbsolute(mappedReference) || mappedReference.split(path.sep).includes("..") || !entryExists(path.join(targetRoot, mappedReference))) throw new Error(`${relativePath}: mapped ownership requires an existing relative reference`);

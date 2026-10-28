@@ -15,6 +15,13 @@
 
 ## Unreleased
 
+## v0.14.0
+
+- 新しいclean kitで再scanし、allowedDecisionsを確認する。safe-updateはkit-managed / managed-merge / project-ownedのUPSTREAM_CHANGEDかつlocalが受入済みupstreamとhash / kind / mode一致する場合に`--confirm`付きで使える。ownershipは保持する。使えない判断は受入時に拒否される。
+- scanのOWNERSHIP_RECOVERY候補は、管理方針を確認して`--update-path-state --path <path> --ownership kit-managed --reason "理由"`で戻せる。対象は受入済みupstreamと完全一致するmanaged-merge / project-ownedのみ。state更新後は再scanする。現行upstreamだけと一致する内容は通常planで受け入れる。
+- manual-mergedは通常管理pathがU1と完全一致ならkit-managed、不一致ならmanaged-mergeとし、project-owned / mapped / intentionally-absentは保持する。変更前後はCLIと適用履歴で確認する。既存のownershipを自動で修復せず、state / baselineを手編集しない。
+- adoption replaceはkit-managedとしてstateを確立する。旧移行の誤ownershipは上記復帰操作で修復する。state形式・profile versionは変更しない。共通案内とupgrade skillは通常state scanでreviewするため専用featureは不要。rollbackはファイル・state・baseline・人向け履歴を同じ退避点へ復元し再scanする。
+
 ## v0.13.0
 
 ### セキュリティ確認
