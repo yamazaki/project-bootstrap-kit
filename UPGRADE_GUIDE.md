@@ -15,6 +15,12 @@
 
 ## Unreleased
 
+## v0.14.1
+
+- development ModelのAGENTSに4.2.4「作業継続と終話」を追加。タスク途中の進捗報告だけで停止せず、1タスクの区切りでは完了範囲・検証結果・次の行動を示して停止する。既存の確定操作の承認要件と、レビュー・受入前の `[>]` 維持は変更しない。
+- stateありprojectは新しいclean kitで通常scan / planを作成し、AGENTSの差分をreviewする。固有規則と競合する場合は3-wayで統合して受け入れ、ファイル全体を上書きしない。stateなし旧projectは既存の再adoption経路で取り込む。専用upgrade featureやprofile更新は不要。
+- rollbackは更新前のfile・state・baseline・人向け履歴を一体で退避した地点へ戻し、再scanする。kit自身のroot AGENTS変更に対する配布先の追加対応はない。
+
 ## v0.14.0
 
 - 新しいclean kitで再scanし、allowedDecisionsを確認する。safe-updateはkit-managed / managed-merge / project-ownedのUPSTREAM_CHANGEDかつlocalが受入済みupstreamとhash / kind / mode一致する場合に`--confirm`付きで使える。ownershipは保持する。使えない判断は受入時に拒否される。
