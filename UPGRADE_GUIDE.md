@@ -15,6 +15,11 @@
 
 ## Unreleased
 
+## v0.15.1
+
+- UIデザインの利用REFへ、新規・既存projectの開始手順、段階別プロンプト、細部の規則化と継続的な拡充の例を追加。機能・skill・state schemaは変更しない。
+- v0.15.0のUI支援を受入済みなら、新たな移行や設定変更は不要。kit側の更新されたREFを参照する。v0.15.0未導入のprojectは同版の導入案内に従う。
+
 ## v0.15.0
 
 - development Modelへ `docs/UI_DESIGN_BASELINE.md` と `project-bootstrap-kit-ui-design` / `project-bootstrap-kit-ui-review` / `project-bootstrap-kit-ui-guideline-maintenance` を追加。既存AGENTS・初期構想・文書分類・phase棚卸しの参照差分も確認する。
