@@ -5,5 +5,5 @@
   "manifestDigest": "sha256:8a74dfff5526b8d8134a4e2f6b3ccac224fb76451b6ec1144a70c18408caaafd",
   "exporterVersion": "0.1.0",
   "treeDigestScope": "path-mode-content-sha256-v1-excluding-public-source",
-  "publicTreeDigest": "sha256:cf78db45211b4d2eeffcc37ca00866d10faeb70da03f85788f063ab12d299a86"
+  "publicTreeDigest": "sha256:4f6569998e849525660ccb5ce0fda8f39601541629978758c913ab09c5b5e8f6"
 }
