@@ -4,6 +4,9 @@
 
 - `doc-governance`: 文書分類、命名、昇格、棚卸しを補助する。
 - `project-bootstrap`: 対話的な要求開発、技術・非機能要件の検討、PoC と初期実用提供の段階設計から WBS までを補助する。
+- `project-bootstrap-kit-ui-design`: 複数UIの対象・共有brand・固有方針、比較案と採用判断を整える。
+- `project-bootstrap-kit-ui-review`: 実画面・操作と共有影響を確認し、媒体別の未確認を残す。
+- `project-bootstrap-kit-ui-guideline-maintenance`: 採用したUI判断の統合・例外・廃止、実装・参照との整合を扱う。
 - `project-bootstrap-kit-upgrade`: project-bootstrap-kit適用済みprojectの更新、旧adopterのstate移行、利用者とAIによる判断・逐次統合を補助する。
 - `version-governance`: version 更新判断、更新対象、更新手順確認を補助する。
 - `phase-transition`: フェーズ終了、クローズ、次フェーズ計画、WBS 作成、見送り事項台帳化を補助する。

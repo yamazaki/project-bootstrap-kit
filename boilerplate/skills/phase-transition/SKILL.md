@@ -27,6 +27,7 @@ description: Use when closing a project phase, checking phase completion, archiv
    - 未完了、後続送り、スコープ外を明示する
    - クローズ文書を `docs/WORK/<last-phase>.<last-milestone>/` に作る
 3. 文書棚卸し
+   - UIがある場合は共有brand・対象別ガイドラインの未反映・例外・未確認を棚卸しし、必要な整理を `project-bootstrap-kit-ui-guideline-maintenance`、実画面確認を `project-bootstrap-kit-ui-review` へ接続する。UI確認だけでフェーズ受入を完了にしない
    - `promote`
    - `retain-in-work`
    - `delete`

@@ -17,3 +17,4 @@ kit 自体の仕様を置く。
 - [Bootstrap State and Three-Way Upgrade Contract](./SPEC_006_bootstrap_state_and_three_way_upgrade.md)
 - [Public Distribution Contract](./SPEC_007_public_distribution_contract.md)
 - [Project Model Contract](./SPEC_008_project_model_contract.md)
+- [UI Design Lifecycle](./SPEC_010_ui_design_lifecycle.md)

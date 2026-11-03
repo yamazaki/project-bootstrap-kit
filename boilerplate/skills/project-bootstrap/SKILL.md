@@ -74,6 +74,8 @@ description: Use when facilitating a new application or service from a vague ide
 
 UI / Interaction が必要な場合、GUI / CLI / Chat / API のどれを誰が使うか整理する。
 
+複数のアプリ・用途・媒体を持つ場合は対象を識別し、共有brandと対象別の目的・方針を分ける。視覚的な方向の具体化が必要な時は `docs/UI_DESIGN_BASELINE.md` と `project-bootstrap-kit-ui-design` へ引き継ぐ。整理済みの要求を聞き直さず、今扱わないUIの詳細設計を開始条件にしない。UI用の別WBSや別文書分類は作らない。
+
 プロダクト価値が GUI や操作体験に依存する場合、API のみでは構想・利用体験検証の完了としない。主要利用者が価値を確認できる簡易 Interface、デザインモック、または仮実装を PoC に含める。
 
 外部公開または外部連携エンドポイントがある場合は、FQDN、環境差分、認証、Cookie、CORS、OAuth redirect、Webhook 署名検証への影響を確認する。

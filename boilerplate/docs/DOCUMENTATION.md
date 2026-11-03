@@ -149,6 +149,12 @@ UI 文書は次の 3 層で扱う。
 - ここでいう UI には GUI だけでなく CLI や Chat UI も含む
 - 初期構想段階では、詳細画面設計よりも `interaction design` の方向性整理を優先する
 
+共通品質とUI文書の運用基準は `docs/UI_DESIGN_BASELINE.md` に置く。プロジェクト内では、UI開始時に `REF_ui-guideline_project.md` を索引・共有brandの入口として最小限作り、必要な対象だけ `REF_ui-guideline_<target-id>.md` へ分割する。単一対象なら同じfile内でよい。既存DESIGN.md等が正本なら索引から参照し、同じ内容を複製しない。
+
+各対象は利用者・用途・媒体、path / route / template等の範囲、brand、正本文書、実装資産、検証条件を持つ。共有の意味・印象と媒体別の表現・操作を分け、共有変更は利用先へ波及確認する。採用判断はREF、製品の拘束条件はSPEC、比較・確認証跡・未採用案は現在タスクのWORKという上記3層を維持する。UI専用の別inbox・別feedback経路は作らない。
+
+固有文書はUI設計skillの雛形から必要時に作り、kitの通常配布snapshotには含めない。雛形の更新で既存の固有文書を再生成しない。新規IDはlowercase kebab-caseとし、索引用`project`、brand文書用`brand-`prefixを避ける。既存IDやpathは索引で対応させ、改名を強制しない。
+
 ### 4.4 フェーズ移行文書の扱い
 
 フェーズ終了と次フェーズ計画を行う場合、次の文書を必要に応じて作成または更新する。
@@ -595,6 +601,12 @@ skills は補助であり、作業線の正本は `WORK_LINE_ROUTING.md`、そ�
   - 文書分類、昇格、命名、棚卸しを補助する
 - `skills/project-bootstrap/`
   - 対話的な要求開発、技術・非機能要件の検討、検証段階の定義、ロードマップと WBS の作成を補助する
+- `skills/project-bootstrap-kit-ui-design/`
+  - 初期構想から対象別の具体案・採否・固有ガイドラインへ接続する
+- `skills/project-bootstrap-kit-ui-review/`
+  - 実画面・操作・共有影響を確認し、媒体別の未確認を残す
+- `skills/project-bootstrap-kit-ui-guideline-maintenance/`
+  - 文書分類の規則に従ってUI判断の統合・例外・廃止と実装整合を扱う
 - `skills/version-governance/`
   - version 更新判断、更新対象、更新手順確認を補助する
 - `skills/capture-inbox/`

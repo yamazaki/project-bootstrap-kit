@@ -9,6 +9,7 @@
 - ChangeLog: [../CHANGELOG.md](../CHANGELOG.md)
 - Technology Profiles: [TECHNOLOGY/INDEX.md](./TECHNOLOGY/INDEX.md)
 - Technology Profile採否: [TECHNOLOGY/ADOPTION.md](./TECHNOLOGY/ADOPTION.md)
+- UIデザイン共通基準: [UI_DESIGN_BASELINE.md](./UI_DESIGN_BASELINE.md)（UI索引・固有ガイドラインは初回利用時に既存文書を確認して整える）
 - 作業線ルーティング: [WORK_LINE_ROUTING.md](./WORK_LINE_ROUTING.md)
 - 仕様: [SPEC](./SPEC/)
 - 意思決定: [ADR](./ADR/)

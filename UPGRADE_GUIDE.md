@@ -15,6 +15,13 @@
 
 ## Unreleased
 
+## v0.15.0
+
+- development Modelへ `docs/UI_DESIGN_BASELINE.md` と `project-bootstrap-kit-ui-design` / `project-bootstrap-kit-ui-review` / `project-bootstrap-kit-ui-guideline-maintenance` を追加。既存AGENTS・初期構想・文書分類・phase棚卸しの参照差分も確認する。
+- stateありは新しいclean kitで通常scan / planを使う。stateなしは通常scanが案内する既存のlegacy state migration / adoption planを使い、ADD・CONFLICTをpathごとに判断する。専用feature・state schema変更・外部tool導入はない。
+- project / brand / 対象別ガイドラインは必要時にskillの雛形から作る。既存DESIGN.md等を正本として参照でき、独自文書・同名skillは無断で上書きしない。雛形更新で育てた文書を再生成しない。
+- rollbackは更新前のcontent・state・baseline・adoption履歴を一体で戻し、project固有文書を保持して再scanする。詳細は[UIデザイン運用](docs/REF/REF_reference_ui_design_lifecycle.md)。
+
 ## v0.14.1
 
 - development ModelのAGENTSに4.2.4「作業継続と終話」を追加。タスク途中の進捗報告だけで停止せず、1タスクの区切りでは完了範囲・検証結果・次の行動を示して停止する。既存の確定操作の承認要件と、レビュー・受入前の `[>]` 維持は変更しない。

@@ -355,10 +355,18 @@ session archiveではsession rootを固定しない。mature adopterのmapping�
 
 ### 5.3 skill の使用
 
+UIを設計・変更する場合は `docs/UI_DESIGN_BASELINE.md` と、該当するUI索引・共有brand・対象別ガイドライン・SPECを読む。1リポジトリに複数のアプリ・用途・媒体がある前提で対象を特定し、共有変更の影響先を確認する。未確定の方向は具体案で確認し、実画面の検証結果と採用判断を現在の作業線へ戻す。UIがなければ固有文書を作らない。
+
 - `skills/doc-governance/`
   - 文書分類、命名、昇格、棚卸しを補助する
 - `skills/project-bootstrap/`
   - 対話的な要求開発、技術・非機能要件の検討、検証段階の定義、ロードマップと WBS の作成を補助する
+- `skills/project-bootstrap-kit-ui-design/`
+  - UI対象ごとの方向性、比較案、採用判断と固有ガイドラインを整える
+- `skills/project-bootstrap-kit-ui-review/`
+  - UI変更後の実画面・操作、共有変更の影響と未確認条件を確認する
+- `skills/project-bootstrap-kit-ui-guideline-maintenance/`
+  - 採用したUI判断を適用範囲に応じて統合し、例外・実装との整合を維持する
 - `skills/project-bootstrap-kit-upgrade/`
   - project-bootstrap-kitの更新、旧adopterのstate移行、利用者とAIによる判断・逐次統合を補助する
 - `skills/version-governance/`

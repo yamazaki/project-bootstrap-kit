@@ -24,6 +24,8 @@ description: Use when creating, classifying, naming, promoting, or retiring proj
 
 ## 棚卸し手順
 
+UI文書では、共通基準は `docs/UI_DESIGN_BASELINE.md`、再利用するbrand・対象方針はREF、製品の拘束条件はSPEC、比較・確認は現在タスクのWORKへ分ける。UI固有の判断の統合・例外・廃止には `project-bootstrap-kit-ui-guideline-maintenance` を使い、本skillの分類規則に従う。既存正本を複製しない。
+
 - 今後も再利用されるか
 - 仕様拘束を持つか
 - 別文書に統合済みか
