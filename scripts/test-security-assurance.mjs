@@ -13,7 +13,7 @@ const kit = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), "security-assurance-"));
 let count = 0;
 function put(root, name, value) { const file = path.join(root, name); fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, typeof value === "string" || Buffer.isBuffer(value) ? value : `${JSON.stringify(value)}\n`); return file; }
-function fixture() {
+function fixture(osvBinary = () => "fixture binary\n") {
   const base = fs.mkdtempSync(path.join(temp, "case-"));
   let target = path.join(base, "project"); let outputRoot = path.join(base, "private");
   fs.mkdirSync(target); fs.mkdirSync(outputRoot, { mode: 0o700 });
@@ -24,7 +24,7 @@ function fixture() {
   const entry = (name, content) => { const data = Buffer.from(content); bytes.set(name, data); return { path: name, url: `https://raw.githubusercontent.com/fixture/${name}`, sha256: digest(data), size: data.length }; };
   const validator = "const fs=require('node:fs'); const d=JSON.parse(fs.readFileSync(process.argv[2])); process.exit(Array.isArray(d)?0:1);\n";
   const cloudflare = { schemaVersion: 1, provider: "cloudflare", version: "fixture", files: [entry("SKILL.md", "fixture skill\n"), entry("validate-findings.cjs", validator), entry("validate-coverage-ledger.cjs", validator)] };
-  const osv = { schemaVersion: 1, provider: "osv", version: "fixture", assets: [{ ...entry(process.platform === "win32" ? "osv-scanner.exe" : "osv-scanner", "fixture binary\n"), platform: process.platform, arch: process.arch }], provenance: [entry("provenance.json", "{}\n")] };
+  const osv = { schemaVersion: 1, provider: "osv", version: "fixture", assets: [{ ...entry(process.platform === "win32" ? "osv-scanner.exe" : "osv-scanner", osvBinary(target)), platform: process.platform, arch: process.arch }], provenance: [entry("provenance.json", "{}\n")] };
   for (const surface of [".agents", ".claude"]) {
     put(target, `${surface}/skills/cloudflare-audit-adapter/provider-lock.json`, cloudflare);
     put(target, `${surface}/skills/osv-dependency-adapter/provider-lock.json`, osv);
@@ -32,7 +32,7 @@ function fixture() {
   const make = (extra = {}) => createPlan({ target, surface: "codex", trigger: "release", outputRoot, network: "online", capabilities: { independentAgents: true, skillRecognized: true }, ...extra });
   return { target, outputRoot, make, bytes, fetch: async (value) => bytes.get(value.path), cloudflare, osv };
 }
-async function test(label, fn) { const f = fixture(); await fn(f); count += 1; console.log(`[OK] ${label}`); }
+async function test(label, fn, osvBinary) { const f = fixture(osvBinary); await fn(f); count += 1; console.log(`[OK] ${label}`); }
 function rawOsv(target, advisories = []) { return { results: [{ source: { path: path.join(target, "package-lock.json"), type: "lockfile" }, packages: [{ package: { name: "fixture-dependency", version: "1.0.0", ecosystem: "npm" }, vulnerabilities: advisories }] }] }; }
 function cfReport(f, plan, findings = [], ledger = [{ status: "covered", coverage_id: "fixture-unit" }]) {
   const dir = fs.mkdtempSync(path.join(f.outputRoot, "audit-"));
@@ -78,6 +78,46 @@ try {
   await test("prior same-source evidence can be reused without refreshing its date", (f) => { const previous = f.make(); const result = evidenceResult(f, previous, "cloudflare"); const current = f.make(); const reused = reuseResult(current, previous, result, current.integrity); assert.equal(reused.completedAt, result.completedAt); assert.equal(reused.planDigest, current.integrity); });
   await test("OSV group CVSS severity and local package coverage are preserved", (f) => { const raw = rawOsv(f.target, [{ id: "OSV-critical" }]); raw.results[0].packages[0].groups = [{ ids: ["OSV-critical"], max_severity: "9.8" }]; assert.equal(normalizeOsv(raw, 1).findings[0].severity, "critical"); const local = rawOsv(f.target); local.results[0].packages[0].package.purl = "pkg:npm/example@1.0.0?source=LOCAL"; assert.equal(normalizeOsv(local, 0).coverageGaps.length, 1); });
   await test("offline scan cannot use an unplanned database", async (f) => { put(f.target, "package-lock.json", "{}\n"); const plan = f.make({ network: "offline" }); await installProvider(plan, "osv", plan.integrity, f.fetch); assert.throws(() => runOsv(plan, plan.integrity), /database.*plan/u); });
+  if (process.platform !== "win32") {
+    for (const exitCode of [0, 1]) {
+      const advisories = exitCode === 0 ? [] : [{ id: "OSV-fixture", database_specific: { severity: "HIGH" } }];
+      await test(`OSV CLI round trip with scanner exit ${exitCode}`, async (f) => {
+        put(f.target, "package-lock.json", "{}\n");
+        const databaseRoot = fs.mkdtempSync(path.join(f.outputRoot, "db-"));
+        put(databaseRoot, "osv-scalibr/npm/all.zip", "fixture database\n");
+        const plan = f.make({ network: "offline", databaseRoot, databaseAt: new Date().toISOString() });
+        await installProvider(plan, "osv", plan.integrity, f.fetch);
+        const planPath = put(f.outputRoot, "plan.json", plan);
+        const cloudflarePath = put(f.outputRoot, "cloudflare.json", evidenceResult(f, plan, "cloudflare"));
+        const osvPath = path.join(f.outputRoot, "saved-osv.json");
+        const cli = (...args) => spawnSync(process.execPath, [
+          path.join(kit, "boilerplate/skills/security-gate/scripts/security-gate.mjs"), ...args,
+        ], { encoding: "utf8" });
+        const scan = cli("run-osv", "--plan", planPath, "--approve-plan", plan.integrity, "--save", osvPath);
+        assert.equal(scan.status, 0, scan.stderr);
+        const saved = json(osvPath);
+        const gate = (file) => cli("gate", "--plan", planPath, "--osv-result", file, "--cloudflare-result", cloudflarePath);
+        const evaluation = gate(osvPath);
+        const verdict = JSON.parse(evaluation.stdout);
+        assert.deepEqual(verdict.blocked, exitCode === 0 ? [] : ["osv: npm:fixture-dependency@1.0.0:OSV-fixture"]);
+        assert.deepEqual(verdict.review, []);
+        assert.equal(evaluation.status, exitCode === 0 ? 0 : 2, evaluation.stderr);
+
+        const directPath = put(f.outputRoot, "direct-osv.json", saved.result);
+        assert.deepEqual(JSON.parse(gate(directPath).stdout), verdict);
+        saved.result.packages += 1;
+        const tampered = gate(put(f.outputRoot, "tampered-osv.json", saved));
+        assert.equal(tampered.status, 2);
+        assert.deepEqual(JSON.parse(tampered.stdout).blocked, ["osv: invalid result"]);
+      }, (target) => `#!/bin/sh
+[ -n "$OSV_SCALIBR_LOCAL_DB_CACHE_DIRECTORY" ] || exit 127
+/bin/cat <<'FIXTURE_OSV_OUTPUT'
+${JSON.stringify(rawOsv(target, advisories))}
+FIXTURE_OSV_OUTPUT
+exit ${exitCode}
+`);
+    }
+  }
   await test("database updates invalidate dependency evidence without discarding code evidence", (f) => { const db = fs.mkdtempSync(path.join(f.outputRoot, "db-")); put(db, "osv-scalibr/npm/all.zip", "fixture-db-1"); const previous = f.make({ databaseRoot: db, databaseAt: new Date().toISOString() }); const result = evidenceResult(f, previous, "cloudflare"); put(db, "osv-scalibr/npm/all.zip", "fixture-db-2"); assert.throws(() => validatePlan(previous), /database/u); const current = f.make({ databaseRoot: db, databaseAt: new Date().toISOString() }); assert.equal(reuseResult(current, previous, result, current.integrity).completedAt, result.completedAt); });
   await test("Cloudflare refuses unbounded or over-budget campaign evidence", async (f) => { const plan = f.make(); await installProvider(plan, "cloudflare", plan.integrity, f.fetch); const dir = cfReport(f, plan); const metadata = json(path.join(dir, "run-metadata.json")); metadata.budget = null; put(dir, "run-metadata.json", metadata); assert.throws(() => importCloudflare(plan, dir, plan.integrity), /budget/u); });
   await test("CLI save cannot traverse an external symlink into the target", (f) => { const shortcut = path.join(f.outputRoot, "into-target"); fs.symlinkSync(f.target, shortcut, "dir"); const result = spawnSync(process.execPath, [path.join(kit, "boilerplate/skills/security-gate/scripts/security-gate.mjs"), "plan", "--target", f.target, "--ai-surface", "codex", "--trigger", "release", "--output-root", f.outputRoot, "--save", path.join(shortcut, "leaked-plan.json")], { encoding: "utf8" }); assert.equal(result.status, 1); assert(!fs.existsSync(path.join(f.target, "leaked-plan.json"))); });

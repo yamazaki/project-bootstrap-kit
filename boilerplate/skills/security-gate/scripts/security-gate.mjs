@@ -41,7 +41,14 @@ export async function main(argv) {
     else if (command === "no-dependencies") value = noDependencies(plan, args.reason, approval);
     else if (command === "accept-findings") value = acceptFindings(plan, args.provider, json(path.resolve(args.result)), args.finding, args.reason, args.expires, approval, args.mitigation);
     else if (command === "reuse") value = reuseResult(plan, json(path.resolve(args["previous-plan"])), json(path.resolve(args.result)), approval);
-    else if (command === "gate") value = evaluate(plan, { cloudflare: args["cloudflare-result"] ? json(path.resolve(args["cloudflare-result"])) : undefined, osv: args["osv-result"] ? json(path.resolve(args["osv-result"])) : undefined }, new Date(), args.decisions ? json(path.resolve(args.decisions)) : []);
+    else if (command === "gate") {
+      const savedOsv = args["osv-result"] ? json(path.resolve(args["osv-result"])) : undefined;
+      const osv = typeof savedOsv?.directory === "string" && Object.keys(savedOsv).length === 2
+        ? savedOsv.result ?? savedOsv
+        : savedOsv;
+      const cloudflare = args["cloudflare-result"] ? json(path.resolve(args["cloudflare-result"])) : undefined;
+      value = evaluate(plan, { cloudflare, osv }, new Date(), args.decisions ? json(path.resolve(args.decisions)) : []);
+    }
     else fail("Commands: plan, install, run-osv, import-osv, import-cloudflare, gate. Read the security-gate skill before execution.");
   }
   if (args.save) {

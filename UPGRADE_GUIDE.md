@@ -15,6 +15,12 @@
 
 ## Unreleased
 
+## v0.15.2
+
+- developmentの既存適用先は通常のstate scan / planで、各AI surfaceの `security-gate/scripts/security-gate.mjs` と `security-gate/references/commands.md` を更新する。更新後は既存の `run-osv --save` ファイルを直接 `gate --osv-result` に渡せる。通常の証跡有効性の条件は引き続き適用される。OSVのprofile・ツールの再導入は不要。
+- `docs/DEVELOPMENT_GUIDELINE.md` の3.3・3.4も通常のstate scan / planで確認する。独自の規約がある場合は該当節へ統合する。採番済みのWBS番号はそのまま使う。
+- stateなしの旧適用先は既存の再adoption経路で差分を受け入れる。限定して手動統合する場合も、対象節やスクリプトの差分を確認し、固有編集を保持する。切り戻す場合は更新前のファイル・state・baseline・adoption履歴を一体で復元して再scanする。
+
 ## v0.15.1
 
 - UIデザインの利用REFへ、新規・既存projectの開始手順、段階別プロンプト、細部の規則化と継続的な拡充の例を追加。機能・skill・state schemaは変更しない。

@@ -25,6 +25,8 @@ Cloudflare import requires `run-metadata.json`, architecture, coverage ledger, f
 
 Plans and results have `schemaVersion=1`, `kind`, a canonical SHA-256 `integrity`, source/policy/plan binding, role-specific evidence and state. The executable contract is `scripts/security-lib.mjs`; `providers.mjs` enforces raw provider-specific contracts. An integrity digest binds bytes, not authorship. Do not accept PR-provided READY files in CI without a trusted runner and artifact binding.
 
+Pass the file from `run-osv --save` directly to `gate --osv-result`, including files saved by earlier kit versions. The gate validates the sealed result inside `{ directory, result }` and resolves evidence from that result. It also accepts direct result files, such as those saved by `import-osv`.
+
 ## Owner decisions and reuse
 
 - `no-dependencies --plan <plan> --reason <reviewed-reason> --approve-plan <digest> --save <private-result>` records an owner-reviewed inventory only when no planned inputs or unresolved common package manifests exist. It is distinct from a zero-package OSV scan.
