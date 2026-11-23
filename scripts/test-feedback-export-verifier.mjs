@@ -10,7 +10,9 @@ import { verifyFeedbackExport } from "../boilerplate/skills/knowledge-feedback/s
 const kitRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "feedback-export-verifier-"));
 
-function exportContent({ confirmed = false, target = "boilerplate/docs/DOCUMENTATION.md", extra = "" } = {}) {
+function exportContent({
+  confirmed = false, target = "boilerplate/docs/DOCUMENTATION.md", newTarget = false, extraRows = "", extra = "",
+} = {}) {
   return `# project-bootstrap-kit Knowledge Feedback - Export
 
 - Status: Export Candidate
@@ -36,7 +38,8 @@ function exportContent({ confirmed = false, target = "boilerplate/docs/DOCUMENTA
 ## 7. Kit Target Map
 | Target | Required change |
 | --- | --- |
-| \`${target}\` | update |
+| ${newTarget ? "[new] " : ""}\`${target}\` | update |
+${extraRows}
 ## 8. Proposed Semantic Diff / Required Change
 semantic change
 ## 9. Reproduction Steps
@@ -98,6 +101,57 @@ try {
 
   const traversalTarget = writeFixture("traversal-target", exportContent({ confirmed: true, target: "docs/../../etc/passwd" }));
   assert(verifyFeedbackExport(traversalTarget, { mode: "final", targetRoot: kitRoot }).failures.some((item) => item.includes("invalid kit target path")), "kit intake rejects target path traversal");
+
+  const newPath = "boilerplate/docs/proposed-folder/proposed-file.md";
+  const targetFixture = path.join(tempRoot, "target-tree");
+  fs.mkdirSync(path.join(targetFixture, "boilerplate/docs"), { recursive: true });
+  fs.writeFileSync(path.join(targetFixture, "boilerplate/docs/DOCUMENTATION.md"), "existing");
+  const intake = (file) => verifyFeedbackExport(file, { mode: "final", targetRoot: targetFixture });
+  const proposal = exportContent({ confirmed: true, target: newPath, newTarget: true });
+  const newFile = writeFixture("new-file", proposal.replace("## 11. Redaction Exceptions / Rationale\n- none\n", ""));
+  const newResult = intake(newFile);
+  assert(newResult.failures.length === 0 && newResult.targetPaths.includes(newPath), "final accepts a new-file-only proposal with a missing parent directory");
+  assert(verifyFeedbackExport(newFile, { mode: "pre-review" }).failures.length === 0, "pre-review recognizes new paths without the kit tree");
+  const mixedTargets = writeFixture("mixed-targets", exportContent({
+    confirmed: true, extraRows: `| [new] \`${newPath}\` | add |`,
+  }));
+  assert(intake(mixedTargets).failures.length === 0 && intake(mixedTargets).targetPaths.length === 2, "final accepts mixed new and existing targets");
+  const mixedModelTargets = writeFixture("mixed-model-targets", exportContent({
+    confirmed: true, target: newPath, newTarget: true, extraRows: "| `models/development/model.json` | update |",
+  }));
+  assert(intake(mixedModelTargets).failures.includes("kit target does not exist: models/development/model.json"),
+    "final requires an existing model path when a new target is present");
+  fs.mkdirSync(path.join(targetFixture, "models/development"), { recursive: true });
+  fs.writeFileSync(path.join(targetFixture, "models/development/model.json"), "{}");
+  assert(intake(mixedModelTargets).failures.length === 0, "final accepts a present model target alongside a new target");
+  const wrongColumn = writeFixture("wrong-column", exportContent({
+    confirmed: true, target: newPath, extraRows: "| `boilerplate/docs/DOCUMENTATION.md` | [new] |",
+  }));
+  assert(intake(wrongColumn).failures.some((item) => item.includes("kit target does not exist")), "a marker in a different cell does not exempt a missing target");
+  const malformed = writeFixture("malformed-new", proposal.replace(`[new] \`${newPath}\``, `[new] ${newPath}`));
+  assert(intake(malformed).failures.some((item) => item.includes("invalid [new] kit target cell")), "a malformed new target cell is rejected");
+
+  for (const [index, target] of ["docs/../escape.md", "/tmp/file.md", "C:/file.md", "docs//file.md", "docs/.git/config", "docs/file.md/"].entries()) {
+    const file = writeFixture(`invalid-new-${index}`, exportContent({ confirmed: true, target, newTarget: true }));
+    const result = verifyFeedbackExport(file, { mode: "pre-review" });
+    assert(result.failures.some((item) => item.includes("invalid kit target path")), `pre-review rejects invalid new path ${target}`);
+  }
+  const proposedParent = path.join(targetFixture, "boilerplate/docs/proposed-folder");
+  fs.writeFileSync(proposedParent, "regular file");
+  assert(intake(newFile).failures.some((item) => item.includes("parent must be a directory")), "final rejects a file in the parent path");
+  fs.unlinkSync(proposedParent);
+  fs.symlinkSync(tempRoot, proposedParent, "dir");
+  assert(intake(newFile).failures.some((item) => item.includes("must not traverse a symlink")), "final rejects a missing new file below a symlink");
+  fs.unlinkSync(proposedParent);
+  fs.mkdirSync(path.join(targetFixture, newPath), { recursive: true });
+  assert(intake(newFile).failures.some((item) => item.includes("must be a file")), "final rejects an existing directory at the proposed file path");
+  fs.rmdirSync(path.join(targetFixture, newPath));
+  fs.symlinkSync(path.join(tempRoot, "not-created.md"), path.join(targetFixture, newPath), "file");
+  assert(intake(newFile).failures.some((item) => item.includes("must not traverse a symlink")), "final rejects a dangling symlink at the proposed file path");
+  fs.unlinkSync(path.join(targetFixture, newPath));
+  fs.writeFileSync(path.join(targetFixture, newPath), "created after submission");
+  assert(intake(newFile).failures.length === 0, "resubmission works after the file is added");
+  fs.unlinkSync(path.join(targetFixture, newPath));
   // Exercise real bootstrap and the legacy capture feature in a disposable project.
   const fixtureKit = path.join(tempRoot, "kit");
   const inventory = spawnSync("git", ["-C", kitRoot, "ls-files", "--cached", "--others", "--exclude-standard", "-z"], { encoding: "utf8" });
@@ -121,6 +175,12 @@ try {
   const gitInit = spawnSync("git", ["init", "-q", project], { encoding: "utf8" });
   if (gitInit.status !== 0) throw new Error(gitInit.stderr);
   run("init-project.mjs", ["--target", project, "--project-name", "Capture Fixture", "--project-slug", "capture-fixture", "--ai-surface", "both", "--technology-profile", "cloudflare-workers"]);
+  for (const surface of [".agents", ".claude"]) {
+    const verifier = path.join(project, surface, "skills/knowledge-feedback/scripts/verify-feedback-export.mjs");
+    const result = spawnSync(process.execPath, [verifier, "--mode", "final", "--kit-root", targetFixture, newFile], { encoding: "utf8" });
+    if (result.status !== 0) throw new Error(result.stderr || result.stdout);
+    assert(result.stdout.includes("verification completed"), `${surface} ships a verifier that accepts new targets`);
+  }
   const unmanaged = path.join(project, "docs", "WORK", "2.1");
   fs.mkdirSync(unmanaged, { recursive: true });
   const oldFeedback = path.join(unmanaged, "kit_feedback_internal_20260923_existing.md");

@@ -78,6 +78,7 @@ Technology Profileは対象の一部であり、本skillはprofile専用では�
   - source evidenceとkit targetを別sectionに分ける
   - kit targetのrepository-relative path、section、schema key、CLI flag、semantic diff、再現手順、受入条件は再現性情報として残す
   - kit target pathはKit Target Map内だけに記載し、source project pathと混在させない
+  - 追加予定ファイルは Kit Target Map の Target 列で、バッククォートで囲んだ kit 相対パスの前に `[new]` を付ける。記入例は export テンプレートを参照する
   - 公式一次情報URLは、プロジェクト固有URLと区別して残してよい
 
 ## export前検査
@@ -89,12 +90,12 @@ node <skill-dir>/scripts/verify-feedback-export.mjs --mode pre-review \
 
 `pre-review` はユーザー確認欄が未チェックでも、匿名化と再現性を検査する。ユーザー確認後は同じcommandを `--mode final` で再実行する。mode未指定は後方互換のため `final` とする。
 
-source project側でkit treeを参照できない場合、target pathの存在確認はkit側の最終検査へ送る。機械検査は固有名詞を完全には検出できないため、最終検査後も人間による残存識別リスクと一般化妥当性の確認を必須とする。
+source project側でkit treeを参照できない場合、target pathの実在や配置の確認はkit側の最終検査で行う。機械検査は固有名詞を完全には検出できないため、最終検査後も人間による残存識別リスクと一般化妥当性の確認を必須とする。
 
 ## kit側での扱い
 
 - feedbackは提案であり、受領時点でkitの正本へ直接反映しない
-- kit管理者は受領時に `node scripts/verify-feedback-export.mjs --mode final <export-file>` を再実行し、Kit Target Mapのpathがkit treeに存在することも確認する
+- kit管理者は受領時に `node scripts/verify-feedback-export.mjs --mode final <export-file>` を再実行する。既存対象は実在を確認する。`[new]` の対象は未作成でも受け付け、実在する親がディレクトリであることと、symlink を経由しないことを確認する。再提出などで同じパスに通常ファイルが作成済みの場合も検査できる
 - kit側で匿名化、再現性、汎用性、現行公式仕様、既存ルールとの矛盾をレビューする
 - 採用する場合はguideline、reference、profile、skill、template、script、文書運用のいずれかへ分類する
 - 反映後はprofile version、CHANGELOG、UPGRADE_GUIDE、必要なupgrade featureを更新する

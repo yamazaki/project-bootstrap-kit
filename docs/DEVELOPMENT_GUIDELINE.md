@@ -66,7 +66,7 @@
 - profileの実証知識と変動する公式仕様を分離しているか
 - 既存プロジェクトの `ADOPTION.md` とknowledge feedbackへ影響するか
 - feedbackを取り込む場合、機密情報除去、汎用性、成立条件、反例、公式一次情報を確認したか
-- feedback受領時に `scripts/verify-feedback-export.mjs --mode final` を再実行し、匿名化、再現性、kit targetの実在、ユーザー確認済みと、人間による残存識別riskを確認したか
+- feedback受領時に `scripts/verify-feedback-export.mjs --mode final` を再実行し、匿名化、再現性、kit target の実在または新規追加先の妥当性、ユーザー確認済みと、人間による残存識別riskを確認したか
 - profileへ反映する場合、profile versionと既存プロジェクト向けupgrade方法を更新したか
 - profile version更新時に、直前versionの文書snapshotを `profiles/<id>/history/<version>/` へ残したか
 - 共通コアの変更か

@@ -24,7 +24,7 @@ const REQUIRED_SANITIZATION_CHECKS = [
   "official source URLs are clearly distinguished from project URLs",
 ];
 
-const TARGET_PATH_PREFIXES = ["boilerplate/", "profiles/", "upgrades/", "scripts/", "docs/"];
+const TARGET_PATH_PREFIXES = ["boilerplate/", "profiles/", "upgrades/", "scripts/", "docs/", "models/"];
 const TARGET_ROOT_FILES = new Set(["AGENTS.md", "README.md", "GETTING_STARTED.md", "UPGRADE_GUIDE.md", "CHANGELOG.md", "VERSION"]);
 const MAX_EXPORT_BYTES = 1024 * 1024;
 
@@ -43,18 +43,57 @@ function removeSection(content, section) {
 }
 
 function collectTargetPaths(targetBody) {
-  const matches = targetBody.matchAll(/`([^`]+)`/gu);
+  const newPaths = new Set();
+  const invalid = new Set();
+  const existingBody = targetBody.replace(
+    /^[ \t]*\|[ \t]*\[new\][ \t]+`([^`\r\n]*)`[ \t]*(?=\|)/gmu,
+    (_cell, value) => {
+      const segments = value.split("/");
+      if (segments.some((segment) => (
+        !segment || /^\s|[.\s]$/u.test(segment) || /^\.git$/iu.test(segment)
+      )) || /[\\<>:"|?*\u0000-\u001f\u007f]/u.test(value)) {
+        invalid.add(value);
+      } else {
+        newPaths.add(value);
+      }
+      return "|";
+    },
+  );
+  const matches = existingBody.matchAll(/`([^`]+)`/gu);
   const paths = [];
-  const invalid = [];
   for (const match of matches) {
     const value = match[1].replace(/\/$/u, "");
     if (value.includes("<") || value.includes("|")) continue;
     const looksLikeTarget = TARGET_ROOT_FILES.has(value) || TARGET_PATH_PREFIXES.some((prefix) => value.startsWith(prefix));
     if (!looksLikeTarget) continue;
-    if (value.includes("\\") || value.split("/").includes("..") || path.posix.normalize(value) !== value) invalid.push(value);
+    if (value.includes("\\") || value.split("/").includes("..") || path.posix.normalize(value) !== value) invalid.add(value);
     else paths.push(value);
   }
-  return { paths: [...new Set(paths)], invalid: [...new Set(invalid)] };
+  const malformedNewTarget = /^[ \t]*\|[ \t]*\[new\](?=[ \t|]|$)/mu.test(existingBody);
+  return { paths: [...new Set(paths)], newPaths, invalid, malformedNewTarget };
+}
+
+function checkNewTarget(root, targetPath) {
+  let candidate = root;
+  const segments = targetPath.split("/");
+  for (const [index, segment] of segments.entries()) {
+    candidate = path.join(candidate, segment);
+    let entry;
+    try {
+      entry = fs.lstatSync(candidate, { throwIfNoEntry: false });
+    } catch {
+      return "cannot inspect new kit target";
+    }
+
+    if (!entry) return null;
+    if (entry.isSymbolicLink()) return "new kit target must not traverse a symlink";
+    if (index === segments.length - 1) {
+      if (!entry.isFile()) return "new kit target must be a file";
+    } else if (!entry.isDirectory()) {
+      return "new kit target parent must be a directory";
+    }
+  }
+  return null;
 }
 
 function hasSectionContent(content, headingPattern) {
@@ -118,9 +157,10 @@ export function verifyFeedbackExport(inputPath, options = {}) {
     failures.push("unchecked: export内容をユーザーが確認した");
   }
 
-  const collectedTargets = targetSection ? collectTargetPaths(targetSection.body) : { paths: [], invalid: [] };
-  const targetPaths = collectedTargets.paths;
-  for (const invalidPath of collectedTargets.invalid) failures.push(`invalid kit target path: ${invalidPath}`);
+  const collectedTargets = collectTargetPaths(targetSection?.body ?? "");
+  const targetPaths = [...new Set([...collectedTargets.paths, ...collectedTargets.newPaths])];
+  if (collectedTargets.malformedNewTarget) failures.push("invalid [new] kit target cell: use [new] followed by a backticked file path");
+  for (const invalidPath of collectedTargets.invalid) failures.push(`invalid kit target path: ${JSON.stringify(invalidPath)}`);
   const hasTargetException = hasSectionContent(content, "Redaction Exceptions / Rationale|匿名化例外(?:と理由)?");
   if (!targetSection?.body && !hasTargetException) failures.push("missing or empty: Kit Target Map");
   if (targetSection?.body && targetPaths.length === 0 && !hasTargetException) failures.push("Kit Target Map has no recognizable kit target path");
@@ -136,7 +176,7 @@ export function verifyFeedbackExport(inputPath, options = {}) {
       return { filePath, mode, targetPaths, failures, warnings };
     }
     const realTargetRoot = fs.realpathSync(targetRoot);
-    for (const targetPath of targetPaths) {
+    for (const targetPath of collectedTargets.paths) {
       const candidate = path.resolve(realTargetRoot, targetPath);
       const rootPrefix = `${realTargetRoot}${path.sep}`;
       if (!candidate.startsWith(rootPrefix)) {
@@ -148,8 +188,12 @@ export function verifyFeedbackExport(inputPath, options = {}) {
         if (realCandidate !== realTargetRoot && !realCandidate.startsWith(rootPrefix)) failures.push(`kit target resolves outside repository root: ${targetPath}`);
       }
     }
+    for (const targetPath of collectedTargets.newPaths) {
+      const problem = checkNewTarget(realTargetRoot, targetPath);
+      if (problem) failures.push(`${problem}: ${targetPath}`);
+    }
   } else if (targetPaths.length > 0) {
-    warnings.push("kit target existence was not checked; run final verification in the kit repository");
+    warnings.push("kit target filesystem checks were not run; run final verification in the kit repository");
   }
 
   return { filePath, mode, targetPaths, failures, warnings };

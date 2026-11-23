@@ -4,6 +4,12 @@
 
 ### Distribution
 
+## v0.15.3 - 2026-11-23
+
+### Distribution
+
+- knowledge-feedback の Target Map で、まだ存在しない追加予定ファイルを `[new]` 付きで指定できる。
+
 ## v0.15.2 - 2026-11-15
 
 ### Distribution

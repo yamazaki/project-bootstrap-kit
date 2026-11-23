@@ -20,9 +20,12 @@
 
 ## 7. Kit Target Map
 
+既存の対象はパスをバッククォートで囲む。新規ファイルは Target 列のパスの前に `[new]` を付ける。追加予定の親ディレクトリも含め、kit リポジトリのルートからの相対パスを書く。該当する例を実際の対象に置き換え、使わない行は削除する。
+
 | Target | Section | Required change |
 | --- | --- | --- |
 | `<kit-relative-path>` | `<section or symbol>` | `<semantic change>` |
+| [new] `<kit-relative-new-file>` | ファイル全体 | `<semantic change>` |
 
 ## 8. Proposed Semantic Diff / Required Change
 ## 9. Reproduction Steps

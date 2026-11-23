@@ -15,6 +15,10 @@
 
 ## Unreleased
 
+## v0.15.3
+
+- knowledge-feedback の新規追加パス記法を使う場合は、適用先の skill（`SKILL.md`、export テンプレート、verifier）を通常の state scan / plan で更新し、受領側も更新済み kit の verifier を使う。旧適用先は既存の再 adoption 手順を使用する。従来記法の export はそのまま検査できる。
+
 ## v0.15.2
 
 - developmentの既存適用先は通常のstate scan / planで、各AI surfaceの `security-gate/scripts/security-gate.mjs` と `security-gate/references/commands.md` を更新する。更新後は既存の `run-osv --save` ファイルを直接 `gate --osv-result` に渡せる。通常の証跡有効性の条件は引き続き適用される。OSVのprofile・ツールの再導入は不要。
