@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "kitVersion": "0.15.3",
+  "kitVersion": "0.16.0",
   "exportContractVersion": 1,
-  "manifestDigest": "sha256:8a74dfff5526b8d8134a4e2f6b3ccac224fb76451b6ec1144a70c18408caaafd",
+  "manifestDigest": "sha256:fdd18a51444cff9abef3712c04d10ca180abada51e534f9edf93948b14526566",
   "exporterVersion": "0.1.0",
   "treeDigestScope": "path-mode-content-sha256-v1-excluding-public-source",
-  "publicTreeDigest": "sha256:5742d04127ad22f6702019e469fb13b626eae8cb615d590201c709f28d7d9432"
+  "publicTreeDigest": "sha256:38d6bb11ef09294429efa41300b0caa3ad7ea0927ce9ac3cb7a36f24ee934ea8"
 }

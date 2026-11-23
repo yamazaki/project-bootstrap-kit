@@ -8,6 +8,7 @@
 - `interaction_design.md`
 - `phase_definition.md`
 - `roadmap.md`
+- `deferred_items.md`（見送り事項がある場合に記入）
 - `implementation_ready_checklist.md`
 
 役割:
@@ -17,6 +18,7 @@
 - `interaction_design.md`: GUI / CLI / Chat / API を含む利用体験と操作境界を整理する
 - `phase_definition.md`: PoC と初期実用提供をどのフェーズで検証・実現するか定義する
 - `roadmap.md`: `docs/ROADMAP.md` へ反映する前の初期構想を整理する
+- `deferred_items.md`: 後続フェーズや長期バックログへ送る事項を記録し、次の計画で確認する
 
 WBS は別の下書き文書を作らず、`docs/PLAN_PHASE_CURRENT.md` を正本として直接作成・更新する。
 

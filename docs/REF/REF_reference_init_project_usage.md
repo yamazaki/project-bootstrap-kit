@@ -239,6 +239,7 @@ task-workspaceでは`README.md`、`SESSION_HANDOFF.md`、`context/`、`outputs/`
 8. UI / Interaction がある場合は `interaction_design.md` を整理する
 9. `phase_definition.md` で PoC、初期実用提供、フェーズの対応を定義する
 10. `docs/ROADMAP.md` と `docs/PLAN_PHASE_CURRENT.md` を具体化する
+11. 初期構想の決定を WBS と照合する。後続に送る事項がある場合は `docs/WORK/0.1/deferred_items.md` を記入し、現在の計画とロードマップから参照する。着手前に `implementation_ready_checklist.md` を確認する
 
 ## 10. 注意事項
 

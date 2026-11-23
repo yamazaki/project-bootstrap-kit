@@ -19,10 +19,11 @@ description: Use when closing a project phase, checking phase completion, archiv
    - 最新の `docs/agent_sessions/session_*.md`
    - `docs/agent_sessions/chat_resume_prompt.md`
    - 対象フェーズの `docs/WORK/<phase>.*`
+   - `docs/WORK/0.1/deferred_items.md` または既存の見送り事項台帳（該当する場合）
    - 関連する `SPEC / ADR / REF / Runbook`
    - `docs/TECHNOLOGY/INDEX.md` と `docs/TECHNOLOGY/ADOPTION.md`
    - kit更新が保留中なら、managed pathを編集する前に更新を先行するか、フェーズ作業後に再scanするかを決める。更新手順は `project-bootstrap-kit-upgrade` skillを参照する
-2. 現行フェーズのクローズ
+2. 現行フェーズのクローズ準備
    - 目標、IN / OUT、完了条件、WBS 状態を照合する
    - 未完了、後続送り、スコープ外を明示する
    - クローズ文書を `docs/WORK/<last-phase>.<last-milestone>/` に作る
@@ -33,30 +34,33 @@ description: Use when closing a project phase, checking phase completion, archiv
    - `delete`
    - Technology Profileの採否、例外、一次検証、後続検討を棚卸しする
    - capture inboxの全件を確認し、`learning`を含む知見の昇格先・保留理由を記録する
-4. 次フェーズ計画
-   - 完了済み `PLAN_PHASE_CURRENT.md` を `docs/history/PLAN_PHASE_<phase>_<yyyymmdd>.md` へ退避する
-   - `docs/ROADMAP.md` の完了フェーズ、現在フェーズ、将来フェーズを更新する
-   - `docs/PLAN_PHASE_CURRENT.md` に次フェーズの目標、IN / OUT、マイルストーン、WBS、完了条件、リスク、成果物を作る
+   - 既存の台帳があれば引き継ぎ、今回の見送り事項を追加する。必要で台帳がなければ `docs/DOCUMENTATION.md` の4.4に従って作成する
+4. 次フェーズ計画案
+   - 次フェーズの目標、IN / OUT、マイルストーン、WBS、完了条件、リスク、成果物を作る。現行の `PLAN_PHASE_CURRENT.md` は完了判定まで維持する
 5. 反映漏れレビュー
    - 前フェーズ成果物と次フェーズ WBS を突き合わせる
    - Runbook の OUT / 未確認事項も確認する
    - 漏れは WBS または `WORK` 文書へ反映する
-6. 見送り事項台帳
-   - 後続フェーズへ送る事項を台帳化する
-   - 各項目に、送り先、再検討タイミング、再検討観点、根拠文書を持たせる
-7. project-bootstrap-kitへのknowledge feedback
+6. 見送り事項台帳の更新
+   - 新たに判明した見送りも台帳に記録する。台帳がなければ `docs/DOCUMENTATION.md` の4.4に従って作成する。次フェーズ WBS と台帳の全項目を照合し、未反映の項目は反映先、継続する送り先と再検討条件、または不要と判断した理由を記録する。処理済みの結果は保持する
+   - 引き継ぐ事項がある場合は、新しい計画の最終マイルストーンと完了の定義、およびロードマップの関連アウトプットから台帳を参照する
+7. 完了判定と計画の切り替え
+   - 台帳の確認結果を含めて完了条件と受入を確かめ、クローズ結果と現行 WBS の最終状態を記録する
+   - 完了済み `PLAN_PHASE_CURRENT.md` を `docs/history/PLAN_PHASE_<phase>_<yyyymmdd>.md` へ退避し、台帳への相対リンクを退避先に合わせる
+   - 次フェーズ計画を `docs/PLAN_PHASE_CURRENT.md` に反映し、`docs/ROADMAP.md` のフェーズ状態を更新する
+8. project-bootstrap-kitへのknowledge feedback
    - 他プロジェクトにも通用する成功、失敗、分岐条件、運用知識を抽出する
    - `docs/project-bootstrap-kit-feedback/` の既存feedbackと照合し、`knowledge-feedback` skillを使い、必要な場合は同directoryにinternal版を作成する
    - kitへ渡す場合は匿名化済みexport版を別に作り、検査とユーザー確認を通す
    - internal版を移送せず、他リポジトリへ自動送信しない
-8. 完了フェーズのsession archive
+9. 完了フェーズのsession archive
    - 正式完了したフェーズに属するsessionを特定する
    - 移動前にrepository内のreference scanを行う
    - 参照切れがないことを確認して、設定済みsession root配下のフェーズ別directoryへ移す
    - 現行フェーズ、inter-phase session、最新のresume promptはactive rootへ残す
    - session pathがimmutable referenceまたは監査対象の場合は移動せず、適用除外理由と代替索引を記録する
    - mature adopterでは既存のmapped session rootを尊重し、kit既定pathへ強制移動しない
-9. セッション更新
+10. セッション更新
    - `docs/agent_sessions/session_yyyymmdd_nn.md`
    - `docs/agent_sessions/chat_resume_prompt.md`
 
@@ -74,7 +78,7 @@ description: Use when closing a project phase, checking phase completion, archiv
 - 完了済み計画が `docs/history/` に退避されている
 - `ROADMAP.md` と `PLAN_PHASE_CURRENT.md` の現在フェーズが一致している
 - 次フェーズ WBS が前フェーズ成果物からの引き継ぎ事項を反映している
-- 後続フェーズへ送る事項が再検討可能な台帳に残っている
+- 台帳がある場合は、全項目の反映先、継続する送り先と再検討条件、または不要と判断した理由を記録した
 - Technology Profileの採否と例外が更新され、汎用知識の有無が確認されている
 - 完了フェーズのsessionがarchiveされ、active rootが現行フェーズ、inter-phase session、最新resume promptに限定されている。または適用除外理由と代替索引が記録されている
 - session移動前のreference scanで参照切れ候補がないことを確認している

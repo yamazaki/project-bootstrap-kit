@@ -165,7 +165,7 @@ UI 文書は次の 3 層で扱う。
 | 完了済み計画の履歴 | `docs/history/PLAN_PHASE_<phase>_<yyyymmdd>.md` | 完了した `PLAN_PHASE_CURRENT.md` を履歴として保存する |
 | 次フェーズ計画 | `docs/PLAN_PHASE_CURRENT.md` | 現在フェーズの WBS と進捗を管理する |
 | 反映漏れレビュー | `docs/WORK/<last-phase>.<last-milestone>/` | 前フェーズ成果物から次フェーズ WBS への反映漏れを確認する |
-| 見送り事項台帳 | `docs/WORK/<last-phase>.<last-milestone>/` または `docs/REF/` | 後続フェーズへ送る事項を、再検討タイミング付きで残す |
+| 見送り事項台帳 | 初期構想の `docs/WORK/0.1/deferred_items.md` または既存の正本。フェーズ移行時に新規作成する場合は `docs/WORK/<last-phase>.<last-milestone>/` | 後続フェーズへ送る事項を、再検討タイミング付きで残す |
 | capture inbox 棚卸し結果 | `docs/WORK/<last-phase>.<last-milestone>/` | `docs/WORK/inbox/` の各 capture を `promoted / deferred / closed / triaged` に判定した結果を記録する |
 | セッション記録 | `docs/agent_sessions/` | 実施作業、決定事項、棚卸し、次アクションを残す |
 | 完了フェーズのsession履歴 | `<session-root>/phaseN/` | 正式完了したPhase Nのsessionを保存する。現行フェーズ、フェーズ間作業、最新resume promptはactive rootへ残す |
@@ -177,8 +177,9 @@ UI 文書は次の 3 層で扱う。
 - 再検討タイミング
 - 再検討観点
 - 根拠文書
+- 状態と確認結果（WBS の反映先、継続する送り先と再検討条件、または不要と判断した理由）
 
-見送り事項台帳は、単一フェーズに閉じる場合は `WORK` に置く。複数フェーズで継続的に使うことが確認できた場合は、`REF_catalog_*` として昇格を検討する。
+初期構想の完了時に後続フェーズや長期バックログへ送る事項がある場合は、`docs/WORK/0.1/deferred_items.md` の雛形を記入する。既存の正本がある場合はその台帳を使う。見送り事項がなければ記入は不要。次フェーズの計画では既存の台帳を引き継ぎ、全項目の扱いを確認する。複数フェーズで継続的に使うことが確認できた場合は、`REF_catalog_*` として昇格を検討し、移動したら参照先も更新する。
 
 フェーズ移行時は、`docs/WORK/inbox/` の `open` を必ず確認する。フェーズクローズ文書または capture inbox 棚卸し結果には、各 capture を次フェーズ計画へ反映したか、後続フェーズへ送ったか、対応不要として閉じたか、継続確認として残したかを記録する。
 
@@ -411,7 +412,8 @@ WBSマイルストーンのクローズ時は、関連するcapture（`learning`
 7. ロードマップ作成
 8. 現在フェーズ計画化
 9. WBS 分解
-10. 実装着手判定
+10. 初期構想の決定と WBS の照合、開始時の準備の確認、見送り事項の引き継ぎ
+11. 実装着手判定
 
 ### 7.2 初期構想文書
 
@@ -420,6 +422,7 @@ WBSマイルストーンのクローズ時は、関連するcapture（`learning`
 - `interaction_design.md`
 - `phase_definition.md`
 - `roadmap.md`
+- `deferred_items.md`（見送り事項がある場合に記入）
 - `implementation_ready_checklist.md`
 
 各文書の役割は次の通りである。
@@ -431,6 +434,7 @@ WBSマイルストーンのクローズ時は、関連するcapture（`learning`
 | `interaction_design.md` | 利用体験と Interface を整理する | GUI / CLI / Chat / API、操作導線、デザイン、FQDN |
 | `phase_definition.md` | 成熟度とフェーズの対応を定義する | 技術実現性検証、構想・利用体験検証、初期実用提供、完了条件 |
 | `roadmap.md` | 中長期のフェーズ構成を下書きする | 現在、将来、長期バックログ |
+| `deferred_items.md` | 後続フェーズや長期バックログへ送る事項を引き継ぐ | 送り先、再検討タイミング・観点、根拠、確認結果 |
 | `implementation_ready_checklist.md` | 実装着手可否を確認する | 要求、成熟度、技術、非機能要件、受入条件 |
 
 `idea.md` は発想の原石を記録する文書であり、要求や解決策を確定する場所ではない。具体的な要求、提供範囲、技術構成は `product_definition.md` で整理する。

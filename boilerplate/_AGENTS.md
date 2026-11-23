@@ -279,12 +279,12 @@ MNT / OPS / ADVでは各件別記録に次アクションと途中状態を追�
 3. 文書棚卸し
 4. `docs/WORK/inbox/` の棚卸し
 5. 未解決事項と後続フェーズ送り論点の整理
-6. 完了済み `PLAN_PHASE_CURRENT.md` の `docs/history/` 退避
-7. `ROADMAP.md` と新しい `PLAN_PHASE_CURRENT.md` の更新
-8. 前フェーズ成果物から次フェーズ WBS への反映漏れレビュー
-9. Technology Profileの採否・例外・一次検証の棚卸し
-10. project-bootstrap-kitへ還元する汎用知識の抽出
-11. 後続フェーズへ送る見送り事項の再検討台帳化
+6. Technology Profileの採否・例外・一次検証の棚卸し
+7. 次フェーズ計画案の作成と、前フェーズ成果物から次フェーズ WBS への反映漏れレビュー
+8. 見送り事項台帳の引き継ぎと確認結果の記録
+9. 現行フェーズの完了判定と、完了済み `PLAN_PHASE_CURRENT.md` の `docs/history/` 退避
+10. `ROADMAP.md` と新しい `PLAN_PHASE_CURRENT.md` の更新
+11. project-bootstrap-kitへ還元する汎用知識の抽出
 12. 完了フェーズsessionの参照検査と、設定済みsession root配下のフェーズ別archiveへの整理
 13. active session rootの残存範囲と、最新resume promptが現行作業を指すことの確認
 14. セッション記録と再開プロンプトの更新
@@ -341,8 +341,9 @@ session archiveではsession rootを固定しない。mature adopterのmapping�
 6. `docs/ROADMAP.md`
 7. `docs/PLAN_PHASE_CURRENT.md`
 8. `docs/WORK/x.y/` または WBS 分解
-9. `implementation_ready_checklist` の確認
-10. 実装着手
+9. 初期構想の決定と WBS の照合、開始時の準備の確認、見送り事項の引き継ぎ
+10. `docs/WORK/0.1/implementation_ready_checklist.md` の確認
+11. 実装着手
 
 初期構想の整理では `project-bootstrap` skill を使用し、次を守る。
 

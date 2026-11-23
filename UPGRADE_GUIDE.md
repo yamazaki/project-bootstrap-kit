@@ -15,6 +15,12 @@
 
 ## Unreleased
 
+## v0.16.0
+
+- development の既存適用先は通常の state scan / plan で、初期構想のチェックリスト、`docs/WORK/0.1/deferred_items.md`、計画テンプレートと関連ガイド・skill を確認する。旧適用先で state がなければ、既存の再 adoption 手順を使用する。
+- 新規の台帳は `ADD` として確認する。記入済みのチェックリスト・計画に競合が出た場合は、追加項目だけを手動統合し、チェック結果や WBS を保持する。既存の台帳が別の場所にある場合は、既定パスが未作成なら `skip` を選び、計画とロードマップの参照を既存の台帳に合わせる。同じパスに台帳がある場合は既存の記録を保持し、`manual-merged` で受け入れる。完了済みフェーズへの遡及記入は不要。
+- 適用前に対象文書、state、baseline、adoption 履歴の復元点を用意する。切り戻しは同じ時点へ一体で戻して再 scan する。
+
 ## v0.15.3
 
 - knowledge-feedback の新規追加パス記法を使う場合は、適用先の skill（`SKILL.md`、export テンプレート、verifier）を通常の state scan / plan で更新し、受領側も更新済み kit の verifier を使う。旧適用先は既存の再 adoption 手順を使用する。従来記法の export はそのまま検査できる。
